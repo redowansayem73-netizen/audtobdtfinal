@@ -1,5 +1,5 @@
 node_modules/
-dist/
+# dist is removed so it can be pushed to GitHub for pre-built deployments
 .env
 .env.*
 !.env.example
@@ -7,6 +7,6 @@ dist/
 .DS_Store
 .vscode/
 coverage/
-build/
+# build/
 .next/
 *.timestamp-*
