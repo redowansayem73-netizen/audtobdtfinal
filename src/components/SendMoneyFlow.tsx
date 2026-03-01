@@ -579,17 +579,17 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
       setError(submitError.message || 'An error occurred');
       setIsProcessing(false);
     } else if (paymentIntent && (paymentIntent.status === 'succeeded' || paymentIntent.status === 'requires_capture')) {
-      try {
-        await fetch('/api/confirm-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentIntentId: paymentIntent.id }),
-        });
-        onSuccess();
-      } catch (err) {
-        setError('Payment succeeded but server update failed. Please contact support.');
-        setIsProcessing(false);
-      }
+      // Optimistically show success to the user immediately
+      onSuccess();
+
+      // Confirm payment on server in the background
+      fetch('/api/confirm-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentIntentId: paymentIntent.id }),
+      }).catch(err => {
+        console.error('Background server update failed after payment success:', err);
+      });
     } else {
       onSuccess();
     }
