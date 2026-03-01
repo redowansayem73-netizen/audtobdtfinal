@@ -46,10 +46,10 @@ export default function UserLayout() {
             <header className="sticky top-0 z-50 bg-white border-b border-slate-100 px-6 py-4">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     {/* Logo Area (65%) */}
-                    <div className="flex-[0.65] flex flex-col justify-center cursor-pointer" onClick={() => navigate('/dashboard')}>
-                        <img src="/logo.png" alt="AUD TO BDT" className="h-16 w-auto mb-1" />
-                        <div className="truncate">
-                            <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest block ml-2">User Dashboard</span>
+                    <div className="flex-[0.65] flex flex-col justify-start cursor-pointer group" onClick={() => navigate('/dashboard')}>
+                        <img src="/logo.png" alt="AUD TO BDT" className="h-10 w-auto" />
+                        <div className="mt-1">
+                            <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest block ml-1 opacity-80 group-hover:opacity-100 transition-opacity">User Dashboard</span>
                         </div>
                     </div>
 

@@ -71,10 +71,12 @@ export default function AdminLayout() {
             {/* Desktop Sidebar */}
             <aside className="w-64 bg-slate-900 text-white flex-col hidden md:flex sticky top-0 h-screen overflow-y-auto">
                 <div className="p-6 border-b border-white/10">
-                    <div className="flex flex-col items-center gap-2 mb-6 relative">
-                        <img src="/logo.png" alt="AUD TO BDT" className="h-20 w-auto brightness-0 invert opacity-90" />
-                        <div className="relative z-10 text-center">
-                            <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest block">Staff Portal</span>
+                    <div className="flex flex-col items-center gap-2 mb-6 group cursor-pointer" onClick={() => navigate('/admin')}>
+                        <div className="bg-white p-2.5 rounded-2xl shadow-sm border border-white/10 mb-1 transition-transform group-hover:scale-105 duration-300">
+                            <img src="/logo.png" alt="AUD TO BDT" className="h-10 w-auto object-contain" />
+                        </div>
+                        <div className="text-center">
+                            <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest block opacity-70 group-hover:opacity-100 transition-opacity">Staff Portal</span>
                         </div>
                     </div>
                 </div>
