@@ -508,8 +508,8 @@ export default function SendMoneyFlow() {
 
                     <ul className="space-y-5 relative">
                       {[
-                        { step: 1, text: 'Transaction logs verification', time: '1-5 MINS' },
-                        { step: 2, text: 'Local currency disbursement', time: 'IN PROGRESS' },
+                        { step: 1, text: 'Payment Received (must check stripe card valid and successful)', time: '1-5 MINS' },
+                        { step: 2, text: 'BDT disbursement', time: 'IN PROGRESS' },
                         { step: 3, text: 'Receipt sent to your email', time: 'FINAL STEP' }
                       ].map((m) => (
                         <li key={m.step} className="flex gap-4 items-center">
