@@ -1,1 +1,9 @@
 [LOG] [2026-03-01T19:30:46.312Z] Server running on http://localhost:3000
+[LOG] [2026-03-01T19:37:10.107Z] Server running on port 3000
+[ERR] [2026-03-01T19:48:14.847Z] [31mWebSocket server error: Port 3001 is already in use[39m
+[ERR] [2026-03-01T19:48:14.856Z] CRITICAL UNCAUGHT EXCEPTION: Error: listen EADDRINUSE: address already in use :::3000
+    at Server.setupListenHandle [as _listen2] (node:net:1940:16)
+    at listenInCluster (node:net:1997:12)
+    at Server.listen (node:net:2102:7)
+    at app.listen (C:\Users\ADMIN\OneDrive\Documents\PERSONAL\DEVELOPMENTS\AUD TO BDT FINAL\node_modules\express\lib\application.js:635:24)
+    at startServer (C:\Users\ADMIN\OneDrive\Documents\PERSONAL\DEVELOPMENTS\AUD TO BDT FINAL\server.ts:932:7)
