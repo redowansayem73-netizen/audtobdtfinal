@@ -1,37 +1,887 @@
-// This file serves as the entry point for Hostinger's Node.js environment.
-// Hostinger requires a .js file for the "Entry file" setting.
+var __defProp = Object.defineProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
 
-import { spawn } from 'child_process';
-import path from 'path';
-import { fileURLToPath } from 'url';
+// server.ts
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import nodemailer from "nodemailer";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// src/db/index.ts
+import { drizzle } from "drizzle-orm/mysql2";
+import mysql from "mysql2/promise";
 
-console.log('Starting Hostinger server wrapper...');
-
-// Run the actual TypeScript server using Node's native loader
-const child = spawn('node', ['--import', 'tsx', 'server.ts'], {
-    stdio: 'inherit',
-    cwd: __dirname,
-    env: process.env
+// src/db/schema.ts
+var schema_exports = {};
+__export(schema_exports, {
+  beneficiaries: () => beneficiaries,
+  loginCodes: () => loginCodes,
+  settings: () => settings,
+  ticketMessages: () => ticketMessages,
+  tickets: () => tickets,
+  transfers: () => transfers,
+  users: () => users
+});
+import { mysqlTable, serial, varchar, decimal, timestamp, text, bigint } from "drizzle-orm/mysql-core";
+var users = mysqlTable("users", {
+  id: serial("id").primaryKey(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  name: varchar("name", { length: 255 }),
+  mobile: varchar("mobile", { length: 50 }),
+  password: varchar("password", { length: 255 }),
+  role: varchar("role", { length: 50 }).default("user"),
+  // 'user', 'admin', 'super_admin'
+  address: text("address"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+var settings = mysqlTable("settings", {
+  key: varchar("key", { length: 255 }).primaryKey(),
+  value: varchar("value", { length: 2048 }),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow()
+});
+var transfers = mysqlTable("transfers", {
+  id: serial("id").primaryKey(),
+  userId: bigint("user_id", { mode: "number" }),
+  amountAud: decimal("amount_aud", { precision: 10, scale: 2 }).notNull(),
+  amountBdt: decimal("amount_bdt", { precision: 15, scale: 2 }).notNull(),
+  rate: decimal("rate", { precision: 10, scale: 4 }).notNull(),
+  method: varchar("method", { length: 50 }).notNull(),
+  provider: varchar("provider", { length: 50 }),
+  // bkash, nagad, rocket
+  accountName: varchar("account_name", { length: 255 }).notNull(),
+  accountNumber: varchar("account_number", { length: 100 }).notNull(),
+  bankName: varchar("bank_name", { length: 255 }),
+  branchName: varchar("branch_name", { length: 255 }),
+  routingNumber: varchar("routing_number", { length: 50 }),
+  status: varchar("status", { length: 50 }).default("pending"),
+  paymentIntentId: varchar("payment_intent_id", { length: 255 }),
+  adminTransactionId: varchar("admin_transaction_id", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+var loginCodes = mysqlTable("login_codes", {
+  email: varchar("email", { length: 255 }).primaryKey(),
+  code: varchar("code", { length: 10 }).notNull(),
+  expiresAt: timestamp("expires_at").notNull()
+});
+var beneficiaries = mysqlTable("beneficiaries", {
+  id: serial("id").primaryKey(),
+  userId: bigint("user_id", { mode: "number" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: varchar("type", { length: 50 }).notNull(),
+  // 'mobile_wallet', 'bank'
+  provider: varchar("provider", { length: 50 }),
+  // bkash, nagad, rocket
+  accountName: varchar("account_name", { length: 255 }).notNull(),
+  accountNumber: varchar("account_number", { length: 100 }).notNull(),
+  bankName: varchar("bank_name", { length: 255 }),
+  branchName: varchar("branch_name", { length: 255 }),
+  routingNumber: varchar("routing_number", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow()
+});
+var tickets = mysqlTable("tickets", {
+  id: serial("id").primaryKey(),
+  userId: bigint("user_id", { mode: "number" }).notNull(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  status: varchar("status", { length: 50 }).default("open"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow()
+});
+var ticketMessages = mysqlTable("ticket_messages", {
+  id: serial("id").primaryKey(),
+  ticketId: bigint("ticket_id", { mode: "number" }).notNull(),
+  sender: varchar("sender", { length: 50 }).notNull(),
+  // 'user' | 'support'
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow()
 });
 
-child.on('error', (err) => {
-    console.error('Failed to start server process:', err);
+// src/db/index.ts
+import dotenv from "dotenv";
+dotenv.config();
+var poolConnection = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME
 });
+var db = drizzle(poolConnection, { schema: schema_exports, mode: "default" });
 
-child.on('exit', (code, signal) => {
-    console.log(`Server process exited with code ${code} and signal ${signal}`);
-    process.exit(code || 0);
+// server.ts
+import { eq, and, gt, gte, lte, sql } from "drizzle-orm";
+import imaps from "imap-simple";
+import { simpleParser } from "mailparser";
+import Stripe from "stripe";
+import { createServer as createViteServer } from "vite";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+var debugStream = fs.createWriteStream("hostinger-debug.txt", { flags: "a" });
+var origLog = console.log;
+var origErr = console.error;
+console.log = (...args) => {
+  debugStream.write(`[LOG] [${(/* @__PURE__ */ new Date()).toISOString()}] ${args.join(" ")}
+`);
+  origLog(...args);
+};
+console.error = (...args) => {
+  debugStream.write(`[ERR] [${(/* @__PURE__ */ new Date()).toISOString()}] ${args.map((a) => typeof a === "object" ? JSON.stringify(a, null, 2) : a).join(" ")}
+`);
+  origErr(...args);
+};
+process.on("uncaughtException", (err) => {
+  console.error("CRITICAL UNCAUGHT EXCEPTION:", err?.stack || err);
 });
+process.on("unhandledRejection", (reason) => {
+  console.error("CRITICAL UNHANDLED REJECTION:", reason);
+});
+var __dirname = path.dirname(fileURLToPath(import.meta.url));
+var app = express();
+app.use(cors());
+app.use(express.json());
+async function getStripeKey(keyName) {
+  const [setting] = await db.select().from(settings).where(eq(settings.key, keyName));
+  return setting?.value || process.env[keyName] || "";
+}
+async function getExchangeRate() {
+  const [setting] = await db.select().from(settings).where(eq(settings.key, "EXCHANGE_RATE"));
+  if (setting && setting.value) {
+    return parseFloat(setting.value);
+  }
+  return 75.45;
+}
+var transporter = nodemailer.createTransport({
+  host: "smtp.hostinger.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+async function sendEmail(to, subject, html) {
+  try {
+    await transporter.sendMail({
+      from: `"AUD TO BDT" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html
+    });
+    console.log(`Email sent to ${to}: ${subject}`);
+  } catch (error) {
+    console.error("Email sending failed:", error);
+  }
+}
+app.get("/api/config/rate", async (req, res) => {
+  try {
+    const rate = await getExchangeRate();
+    res.json({ rate });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+async function verifyStaff(req, res) {
+  const staffEmail = req.query.staffEmail || req.body.staffEmail;
+  console.log(`[AUTH DEBUG] ${req.method} ${req.url} | staffEmail from query: ${req.query.staffEmail} | staffEmail from body: ${req.body.staffEmail}`);
+  if (!staffEmail) {
+    res.status(401).json({ error: "Staff authentication required" });
+    return null;
+  }
+  const [staff] = await db.select().from(users).where(eq(users.email, staffEmail));
+  if (!staff || staff.role !== "admin" && staff.role !== "super_admin") {
+    res.status(403).json({ error: "Unauthorized access" });
+    return null;
+  }
+  return staff;
+}
+async function verifySuperAdmin(req, res) {
+  const staff = await verifyStaff(req, res);
+  if (!staff) return null;
+  if (staff.role !== "super_admin") {
+    res.status(403).json({ error: "Super Admin access required" });
+    return null;
+  }
+  return staff;
+}
+app.post("/api/auth/request-code", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email is required" });
+    const code = Math.floor(1e5 + Math.random() * 9e5).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1e3);
+    await db.insert(loginCodes).values({
+      email,
+      code,
+      expiresAt
+    }).onDuplicateKeyUpdate({
+      set: { code, expiresAt }
+    });
+    const html = `
+      <div style="font-family: 'Inter', Arial, sans-serif; padding: 40px 20px; background-color: #f8fafc; text-align: center;">
+        <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+          <div style="background-color: #0f172a; padding: 24px;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 1px;">AUD TO BDT</h1>
+          </div>
+          <div style="padding: 40px 30px;">
+            <h2 style="color: #0f172a; margin-top: 0; margin-bottom: 16px; font-size: 20px; font-weight: 700;">Secure Login Verification</h2>
+            <p style="color: #475569; font-size: 16px; line-height: 1.5; margin-bottom: 32px;">Please use the verification code below to securely log into your account. This code is valid for 15 minutes.</p>
+            <div style="background-color: #f8fafc; padding: 20px; border-radius: 12px; border: 2px dashed #cbd5e1; margin-bottom: 32px;">
+              <span style="font-size: 40px; font-weight: 900; letter-spacing: 12px; color: #10b981; margin-left: 12px;">${code}</span>
+            </div>
+            <p style="color: #64748b; font-size: 14px; margin-bottom: 0;">If you did not request this code, please securely ignore this email or contact our support team immediately.</p>
+          </div>
+          <div style="background-color: #f1f5f9; padding: 20px; border-top: 1px solid #e2e8f0;">
+            <p style="color: #94a3b8; font-size: 12px; margin: 0;">&copy; ${(/* @__PURE__ */ new Date()).getFullYear()} AUD TO BDT Transfer. All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+    `;
+    await sendEmail(email, "Your AUD TO BDT Login Code", html);
+    res.json({ success: true, message: "OTP sent to your email" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.post("/api/auth/verify-code", async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    if (!email || !code) return res.status(400).json({ error: "Email and code are required" });
+    const [record] = await db.select().from(loginCodes).where(and(eq(loginCodes.email, email), eq(loginCodes.code, code), gt(loginCodes.expiresAt, /* @__PURE__ */ new Date())));
+    if (!record) {
+      return res.status(400).json({ error: "Invalid or expired code" });
+    }
+    await db.delete(loginCodes).where(eq(loginCodes.email, email));
+    let [user] = await db.select().from(users).where(eq(users.email, email));
+    if (!user) {
+      await db.insert(users).values({ email });
+      [user] = await db.select().from(users).where(eq(users.email, email));
+    }
+    res.json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get("/api/user/profile", async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) return res.status(400).json({ error: "Email is required" });
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.patch("/api/user/profile", async (req, res) => {
+  try {
+    const { currentEmail, name, mobile, address } = req.body;
+    if (!currentEmail) return res.status(400).json({ error: "Current email is required" });
+    await db.update(users).set({ name, mobile, address }).where(eq(users.email, currentEmail));
+    const [updatedUser] = await db.select().from(users).where(eq(users.email, currentEmail));
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.post("/api/auth/admin-login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: "Email and password are required" });
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    if (!user || user.password !== password) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+    if (user.role !== "admin" && user.role !== "super_admin") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+    res.json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.post("/api/create-payment-intent", async (req, res) => {
+  try {
+    const { amountAud, email, name, mobile, deliveryMethod, destinationDetails } = req.body;
+    let [user] = await db.select().from(users).where(eq(users.email, email));
+    if (!user) {
+      await db.insert(users).values({ email, name, mobile });
+      [user] = await db.select().from(users).where(eq(users.email, email));
+    } else {
+      await db.update(users).set({ name, mobile }).where(eq(users.id, user.id));
+    }
+    const secret = await getStripeKey("STRIPE_SECRET_KEY");
+    const dynamicStripe = new Stripe(secret, { apiVersion: "2023-10-16" });
+    const amountCents = Math.round(amountAud * 100);
+    const paymentIntent = await dynamicStripe.paymentIntents.create({
+      amount: amountCents,
+      currency: "aud",
+      metadata: {
+        userId: user.id.toString(),
+        email
+      }
+    });
+    const rate = await getExchangeRate();
+    const amountBdt = amountAud * rate;
+    const transferData = {
+      userId: user.id,
+      amountAud: amountAud.toString(),
+      amountBdt: amountBdt.toString(),
+      rate: rate.toString(),
+      method: deliveryMethod,
+      accountName: destinationDetails.accountName,
+      accountNumber: destinationDetails.accountNumber,
+      paymentIntentId: paymentIntent.id,
+      status: "pending"
+    };
+    if (deliveryMethod === "mobile_wallet") {
+      transferData.provider = destinationDetails.walletProvider;
+    } else {
+      transferData.bankName = destinationDetails.bankName;
+      transferData.branchName = destinationDetails.branchName;
+      transferData.routingNumber = destinationDetails.routingNumber;
+    }
+    const [result] = await db.insert(transfers).values(transferData);
+    const existingBen = await db.select().from(beneficiaries).where(and(
+      eq(beneficiaries.userId, user.id),
+      eq(beneficiaries.accountNumber, destinationDetails.accountNumber)
+    ));
+    if (existingBen.length === 0) {
+      await db.insert(beneficiaries).values({
+        userId: user.id,
+        name: destinationDetails.accountName,
+        type: deliveryMethod,
+        provider: destinationDetails.walletProvider,
+        accountName: destinationDetails.accountName,
+        accountNumber: destinationDetails.accountNumber,
+        bankName: destinationDetails.bankName,
+        branchName: destinationDetails.branchName,
+        routingNumber: destinationDetails.routingNumber
+      });
+    }
+    res.json({
+      clientSecret: paymentIntent.client_secret,
+      transactionId: result.insertId,
+      user: { id: user.id, email: user.email, name: user.name, mobile: user.mobile }
+    });
+  } catch (error) {
+    console.error("Payment Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+app.post("/api/confirm-payment", async (req, res) => {
+  try {
+    const { paymentIntentId } = req.body;
+    const secret = await getStripeKey("STRIPE_SECRET_KEY");
+    const dynamicStripe = new Stripe(secret, { apiVersion: "2023-10-16" });
+    const paymentIntent = await dynamicStripe.paymentIntents.retrieve(paymentIntentId);
+    if (paymentIntent.status === "succeeded" || paymentIntent.status === "requires_capture") {
+      await db.update(transfers).set({ status: "paid" }).where(eq(transfers.paymentIntentId, paymentIntentId));
+      const [transfer] = await db.select().from(transfers).where(eq(transfers.paymentIntentId, paymentIntentId));
+      const [user] = await db.select().from(users).where(eq(users.id, transfer.userId));
+      if (user && user.email) {
+        const receiptHtml = `
+          <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f8fafc; border-radius: 12px; max-width: 600px; margin: 0 auto; color: #0f172a;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #10b981; margin: 0;">Payment Successful</h1>
+              <p style="color: #64748b; font-size: 16px;">Your transfer has been secured and is processing.</p>
+            </div>
+            
+            <div style="background: white; border-radius: 12px; padding: 24px; border: 1px solid #e2e8f0;">
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 12px;">
+                <span style="color: #64748b; font-weight: bold;">Amount Sent (AUD)</span>
+                <span style="font-weight: 900; font-size: 18px;">$${transfer.amountAud}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 12px;">
+                <span style="color: #64748b; font-weight: bold;">To Receive (BDT)</span>
+                <span style="font-weight: 900; font-size: 18px; color: #10b981;">\u09F3${transfer.amountBdt}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 12px;">
+                <span style="color: #64748b; font-weight: bold;">Recipient Name</span>
+                <span style="font-weight: bold;">${transfer.accountName}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding-bottom: 12px; margin-bottom: 12px;">
+                <span style="color: #64748b; font-weight: bold;">Account / Mobile</span>
+                <span style="font-weight: bold;">${transfer.accountNumber}</span>
+              </div>
+            </div>
+            
+            <p style="text-align: center; color: #64748b; margin-top: 30px; font-size: 14px;">Log in to your AUD TO BDT Dashboard to track the live progress of your transfer.</p>
+          </div>
+        `;
+        await sendEmail(user.email, "Transfer Receipt - Payment Successful", receiptHtml);
+      }
+      res.json({ success: true, status: "paid" });
+    } else {
+      res.json({ success: false, status: paymentIntent.status });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get("/api/user/beneficiaries", async (req, res) => {
+  try {
+    const email = req.query.email;
+    if (!email) return res.status(400).json({ error: "Email is required" });
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    if (!user) return res.json([]);
+    const userBeneficiaries = await db.select().from(beneficiaries).where(eq(beneficiaries.userId, user.id));
+    res.json(userBeneficiaries);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.post("/api/user/beneficiaries", async (req, res) => {
+  try {
+    const { email, ...beneficiaryData } = req.body;
+    if (!email) return res.status(400).json({ error: "Email is required" });
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    if (!user) return res.status(404).json({ error: "User not found" });
+    await db.insert(beneficiaries).values({
+      userId: user.id,
+      ...beneficiaryData
+    });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get("/api/user/transfers", async (req, res) => {
+  try {
+    const email = req.query.email;
+    if (!email) return res.status(400).json({ error: "Email is required" });
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    if (!user) return res.json([]);
+    const history = await db.select().from(transfers).where(eq(transfers.userId, user.id)).orderBy(transfers.createdAt);
+    res.json(history);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get("/api/admin/transfers", async (req, res) => {
+  try {
+    const staff = await verifyStaff(req, res);
+    if (!staff) return;
+    const results = await db.select({
+      id: transfers.id,
+      amountAud: transfers.amountAud,
+      amountBdt: transfers.amountBdt,
+      status: transfers.status,
+      method: transfers.method,
+      accountName: transfers.accountName,
+      accountNumber: transfers.accountNumber,
+      createdAt: transfers.createdAt,
+      adminTransactionId: transfers.adminTransactionId,
+      paymentIntentId: transfers.paymentIntentId,
+      bankName: transfers.bankName,
+      branchName: transfers.branchName,
+      routingNumber: transfers.routingNumber,
+      provider: transfers.provider,
+      userEmail: users.email,
+      userName: users.name,
+      userMobile: users.mobile
+    }).from(transfers).innerJoin(users, eq(transfers.userId, users.id)).orderBy(transfers.createdAt);
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.patch("/api/admin/transfers/:id", async (req, res) => {
+  try {
+    const staff = await verifyStaff(req, res);
+    if (!staff) return;
+    const { id } = req.params;
+    const { status, adminTransactionId } = req.body;
+    const updateData = { status };
+    if (adminTransactionId) {
+      updateData.adminTransactionId = adminTransactionId;
+    }
+    await db.update(transfers).set(updateData).where(eq(transfers.id, parseInt(id)));
+    if (status === "sent") {
+      const [transfer] = await db.select().from(transfers).where(eq(transfers.id, parseInt(id)));
+      const [user] = await db.select().from(users).where(eq(users.id, transfer.userId));
+      if (user && user.email) {
+        const deliveryHtml = `
+          <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f8fafc; border-radius: 12px; max-width: 600px; margin: 0 auto; color: #0f172a;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <div style="width: 60px; height: 60px; background: #10b981; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 30px;">\u2713</div>
+              <h1 style="color: #10b981; margin: 0;">Payment Completed</h1>
+              <p style="color: #64748b; font-size: 16px;">Your funds have been successfully delivered to the recipient.</p>
+            </div>
+            
+            <div style="background: white; border-radius: 12px; padding: 24px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+              <h3 style="margin-top: 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; color: #64748b; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Delivery Details</h3>
+              <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                <span style="color: #64748b;">Transaction ID</span>
+                <span style="font-weight: bold; color: #10b981;">#${adminTransactionId || transfer.paymentIntentId}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                <span style="color: #64748b;">Amount Sent</span>
+                <span style="font-weight: bold;">$${transfer.amountAud} AUD</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                <span style="color: #64748b;">Amount Delivered</span>
+                <span style="font-weight: 900; color: #10b981;">\u09F3${transfer.amountBdt} BDT</span>
+              </div>
+            </div>
 
-// Handle graceful shutdown
-process.on('SIGTERM', () => {
-    console.log('Received SIGTERM, shutting down...');
-    child.kill('SIGTERM');
+            <div style="background: #f1f5f9; border-radius: 12px; padding: 24px;">
+              <h3 style="margin-top: 0; color: #64748b; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Recipient Information</h3>
+              <p style="margin: 5px 0; font-weight: bold;">${transfer.accountName}</p>
+              <p style="margin: 5px 0; color: #64748b;">${transfer.method.replace("_", " ").toUpperCase()}: ${transfer.accountNumber}</p>
+              ${transfer.bankName ? `<p style="margin: 5px 0; color: #64748b;">${transfer.bankName} (${transfer.branchName})</p>` : ""}
+            </div>
+            
+            <p style="text-align: center; color: #64748b; margin-top: 30px; font-size: 14px;">Thank you for choosing AUD TO BDT for your international transfers.</p>
+          </div>
+        `;
+        await sendEmail(user.email, "Payment Completed - Funds Delivered", deliveryHtml);
+      }
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
-process.on('SIGINT', () => {
-    console.log('Received SIGINT, shutting down...');
-    child.kill('SIGINT');
+app.post("/api/admin/config/rate", async (req, res) => {
+  try {
+    const staff = await verifyStaff(req, res);
+    if (!staff) return;
+    const { rate } = req.body;
+    if (!rate) return res.status(400).json({ error: "Rate is required" });
+    await db.insert(settings).values({ key: "EXCHANGE_RATE", value: String(rate) }).onDuplicateKeyUpdate({ set: { value: String(rate) } });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get("/api/admin/customers", async (req, res) => {
+  try {
+    const staff = await verifyStaff(req, res);
+    if (!staff) return;
+    const allUsers = await db.select().from(users).where(eq(users.role, "user")).orderBy(users.createdAt);
+    const statsQuery = await db.select({
+      userId: transfers.userId,
+      totalAud: sql`sum(${transfers.amountAud})`,
+      count: sql`count(${transfers.id})`
+    }).from(transfers).groupBy(transfers.userId);
+    const statsMap = /* @__PURE__ */ new Map();
+    statsQuery.forEach((s) => statsMap.set(s.userId, s));
+    const enrichedUsers = allUsers.map((u) => ({
+      ...u,
+      stats: statsMap.get(u.id) || { totalAud: 0, count: 0 }
+    }));
+    res.json(enrichedUsers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get("/api/admin/customers/:id", async (req, res) => {
+  try {
+    const staff = await verifyStaff(req, res);
+    if (!staff) return;
+    const userId = parseInt(req.params.id);
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user) return res.status(404).json({ error: "User not found" });
+    const customerTransfers = await db.select().from(transfers).where(eq(transfers.userId, userId)).orderBy(transfers.createdAt);
+    const customerBeneficiaries = await db.select().from(beneficiaries).where(eq(beneficiaries.userId, userId));
+    res.json({
+      ...user,
+      transfers: customerTransfers,
+      beneficiaries: customerBeneficiaries
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get("/api/admin/reports", async (req, res) => {
+  try {
+    const staff = await verifyStaff(req, res);
+    if (!staff) return;
+    const { range = "all", startDate, endDate } = req.query;
+    let dateFilter = void 0;
+    const now = /* @__PURE__ */ new Date();
+    if (range === "daily") {
+      const startOfDay = new Date(now.setHours(0, 0, 0, 0));
+      dateFilter = gt(transfers.createdAt, startOfDay);
+    } else if (range === "weekly") {
+      const startOfWeek = new Date(now.setDate(now.getDate() - 7));
+      dateFilter = gt(transfers.createdAt, startOfWeek);
+    } else if (range === "monthly") {
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      dateFilter = gt(transfers.createdAt, startOfMonth);
+    } else if (range === "yearly") {
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
+      dateFilter = gt(transfers.createdAt, startOfYear);
+    } else if (range === "custom") {
+      const start = startDate ? new Date(startDate) : /* @__PURE__ */ new Date(0);
+      const end = endDate ? new Date(endDate) : /* @__PURE__ */ new Date();
+      end.setHours(23, 59, 59, 999);
+      dateFilter = and(
+        gte(transfers.createdAt, start),
+        lte(transfers.createdAt, end)
+      );
+    }
+    let statementQuery = db.select({
+      id: transfers.id,
+      date: transfers.createdAt,
+      accountName: transfers.accountName,
+      status: transfers.status,
+      amountAud: transfers.amountAud,
+      amountBdt: transfers.amountBdt,
+      rate: transfers.rate,
+      adminTransactionId: transfers.adminTransactionId,
+      paymentIntentId: transfers.paymentIntentId,
+      senderName: users.name
+    }).from(transfers).innerJoin(users, eq(transfers.userId, users.id));
+    if (dateFilter) {
+      statementQuery = statementQuery.where(dateFilter);
+    }
+    const statements = await statementQuery.orderBy(transfers.createdAt);
+    const aggregates = statements.reduce((acc, curr) => {
+      if (curr.status === "paid" || curr.status === "sent") {
+        acc.totalAud += parseFloat(curr.amountAud);
+        acc.totalBdt += parseFloat(curr.amountBdt);
+        acc.completedCount += 1;
+      }
+      acc.count += 1;
+      return acc;
+    }, { totalAud: 0, totalBdt: 0, count: 0, completedCount: 0 });
+    res.json({ aggregates, statement: statements });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get("/api/super/users", async (req, res) => {
+  try {
+    const staff = await verifySuperAdmin(req, res);
+    if (!staff) return;
+    const results = await db.select().from(users).where(and(
+      eq(users.role, "admin") || eq(users.role, "super_admin")
+    )).orderBy(users.createdAt);
+    const allAdmins = await db.select().from(users).orderBy(users.createdAt);
+    res.json(allAdmins.filter((u) => u.role === "admin" || u.role === "super_admin"));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.post("/api/super/admins", async (req, res) => {
+  try {
+    const staff = await verifySuperAdmin(req, res);
+    if (!staff) return;
+    const { email, password, name } = req.body;
+    await db.insert(users).values({
+      email,
+      password,
+      name,
+      role: "admin"
+    });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.get("/api/super/config", async (req, res) => {
+  try {
+    const staff = await verifySuperAdmin(req, res);
+    if (!staff) return;
+    const allSettings = await db.select().from(settings);
+    res.json(allSettings);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.post("/api/super/config", async (req, res) => {
+  try {
+    const staff = await verifySuperAdmin(req, res);
+    if (!staff) return;
+    const { key, value } = req.body;
+    await db.insert(settings).values({ key, value }).onDuplicateKeyUpdate({ set: { value } });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.patch("/api/super/users/:id/role", async (req, res) => {
+  try {
+    const staff = await verifySuperAdmin(req, res);
+    if (!staff) return;
+    const { id } = req.params;
+    const { role } = req.body;
+    if (!["user", "admin", "super_admin"].includes(role)) {
+      return res.status(400).json({ error: "Invalid role" });
+    }
+    await db.update(users).set({ role }).where(eq(users.id, parseInt(id)));
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+app.post("/api/support/tickets", async (req, res) => {
+  try {
+    const { email, subject, message } = req.body;
+    if (!email || !subject || !message) return res.status(400).json({ error: "Missing fields" });
+    let [user] = await db.select().from(users).where(eq(users.email, email));
+    if (!user) {
+      await db.insert(users).values({ email });
+      [user] = await db.select().from(users).where(eq(users.email, email));
+    }
+    const [result] = await db.insert(tickets).values({
+      userId: user.id,
+      subject,
+      status: "open"
+    });
+    const ticketId = result.insertId;
+    await db.insert(ticketMessages).values({
+      ticketId,
+      sender: "user",
+      message
+    });
+    const html = `<p><strong>New message from ${email}</strong></p><p>${message}</p>`;
+    await transporter.sendMail({
+      from: `"AUD TO BDT Support System" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER,
+      replyTo: email,
+      subject: `[Ticket #${ticketId}] ${subject}`,
+      html
+    });
+    res.json({ success: true, ticketId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post("/api/support/tickets/:id/messages", async (req, res) => {
+  try {
+    const { email, message } = req.body;
+    const ticketId = parseInt(req.params.id);
+    await db.insert(ticketMessages).values({
+      ticketId,
+      sender: "user",
+      message
+    });
+    const [ticket] = await db.select().from(tickets).where(eq(tickets.id, ticketId));
+    await transporter.sendMail({
+      from: `"AUD TO BDT Support System" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER,
+      replyTo: email,
+      subject: `Re: [Ticket #${ticketId}] ${ticket.subject}`,
+      html: `<p><strong>Reply from ${email}:</strong></p><p>${message}</p>`
+    });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.get("/api/support/tickets", async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) return res.json([]);
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    if (!user) return res.json([]);
+    const userTickets = await db.select().from(tickets).where(eq(tickets.userId, user.id)).orderBy(tickets.updatedAt);
+    res.json(userTickets);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.get("/api/support/tickets/:id/messages", async (req, res) => {
+  try {
+    const msgs = await db.select().from(ticketMessages).where(eq(ticketMessages.ticketId, parseInt(req.params.id))).orderBy(ticketMessages.createdAt);
+    res.json(msgs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+var lastSyncDate = /* @__PURE__ */ new Date();
+lastSyncDate.setHours(lastSyncDate.getHours() - 24);
+async function pollImap() {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
+  try {
+    const config = {
+      imap: {
+        user: process.env.EMAIL_USER,
+        password: process.env.EMAIL_PASS,
+        host: "imap.hostinger.com",
+        port: 993,
+        tls: true,
+        tlsOptions: { rejectUnauthorized: false },
+        authTimeout: 1e4
+      }
+    };
+    const connection = await imaps.connect(config);
+    const boxesToCheck = ["INBOX", "INBOX.Sent"];
+    for (const box of boxesToCheck) {
+      try {
+        await connection.openBox(box);
+        const searchCriteria = ["UNSEEN"];
+        const fetchOptions = { bodies: ["HEADER", "TEXT"], markSeen: true };
+        const messages = await connection.search(searchCriteria, fetchOptions);
+        for (const msg of messages) {
+          const header = msg.parts.find((p) => p.which === "HEADER");
+          const textPart = msg.parts.find((p) => p.which === "TEXT");
+          if (header && textPart) {
+            const parsed = await simpleParser(textPart.body);
+            const subject = parsed.subject || "";
+            const match = subject.match(/\[Ticket #(\d+)\]/i);
+            if (match) {
+              const ticketId = parseInt(match[1]);
+              const senderInfo = parsed.from?.value[0]?.address || "";
+              const isFromSupport = senderInfo.toLowerCase() === process.env.EMAIL_USER?.toLowerCase();
+              let cleanText = parsed.text || "(HTML Only)";
+              cleanText = cleanText.split(/\n[>_-]/)[0];
+              await db.insert(ticketMessages).values({
+                ticketId,
+                sender: isFromSupport ? "support" : "user",
+                message: cleanText.trim()
+              });
+            }
+          }
+        }
+      } catch (boxError) {
+      }
+    }
+    connection.end();
+  } catch (err) {
+    console.error("IMAP Error:", err);
+  }
+}
+setInterval(pollImap, 3e4);
+async function startServer() {
+  const PORT = Number(process.env.PORT) || 3e3;
+  if (process.env.NODE_ENV !== "production") {
+    const vite = await createViteServer({
+      server: {
+        middlewareMode: true,
+        hmr: {
+          port: 3001
+        }
+      },
+      appType: "spa"
+    });
+    app.use(vite.middlewares);
+    app.use("*", async (req, res, next) => {
+      const url = req.originalUrl;
+      try {
+        let template = fs.readFileSync(path.resolve(__dirname, "index.html"), "utf-8");
+        template = await vite.transformIndexHtml(url, template);
+        res.status(200).set({ "Content-Type": "text/html" }).end(template);
+      } catch (e) {
+        vite.ssrFixStacktrace(e);
+        next(e);
+      }
+    });
+  } else {
+    app.use(express.static("dist"));
+    app.get("*", (req, res) => {
+      res.sendFile(path.resolve(__dirname, "dist", "index.html"));
+    });
+  }
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+startServer().catch((err) => {
+  console.error("Failed to start server:", err);
 });
