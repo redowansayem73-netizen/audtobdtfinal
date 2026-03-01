@@ -4,6 +4,8 @@ node_modules/
 .env.*
 !.env.example
 *.log
+hostinger-debug.txt
+startup.log
 .DS_Store
 .vscode/
 coverage/
