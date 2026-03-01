@@ -3,8 +3,10 @@ import express from 'express';
 import cors from 'cors';
 import nodemailer from 'nodemailer';
 import { db } from './src/db/index.js';
-import { users, transfers, loginCodes, settings, beneficiaries } from './src/db/schema.js';
+import { users, transfers, loginCodes, settings, beneficiaries, tickets, ticketMessages } from './src/db/schema.js';
 import { eq, and, gt, gte, lte, or, sql } from 'drizzle-orm';
+import imaps from 'imap-simple';
+import { simpleParser } from 'mailparser';
 import Stripe from 'stripe';
 import { createServer as createViteServer } from 'vite';
 import fs from 'fs';
@@ -717,6 +719,162 @@ app.patch('/api/super/users/:id/role', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+/* ----- Support Ticket System & IMAP Listener ----- */
+
+app.post('/api/support/tickets', async (req, res) => {
+  try {
+    const { email, subject, message } = req.body;
+    if (!email || !subject || !message) return res.status(400).json({ error: 'Missing fields' });
+
+    let [user] = await db.select().from(users).where(eq(users.email, email));
+    if (!user) {
+      await db.insert(users).values({ email });
+      [user] = await db.select().from(users).where(eq(users.email, email));
+    }
+
+    const [result] = await db.insert(tickets).values({
+      userId: user.id,
+      subject,
+      status: 'open'
+    });
+    const ticketId = (result as any).insertId;
+
+    await db.insert(ticketMessages).values({
+      ticketId,
+      sender: 'user',
+      message
+    });
+
+    const html = `<p><strong>New message from ${email}</strong></p><p>${message}</p>`;
+    await transporter.sendMail({
+      from: `"AUD TO BDT Support System" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER,
+      replyTo: email,
+      subject: `[Ticket #${ticketId}] ${subject}`,
+      html,
+    });
+
+    res.json({ success: true, ticketId });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/support/tickets/:id/messages', async (req, res) => {
+  try {
+    const { email, message } = req.body;
+    const ticketId = parseInt(req.params.id);
+
+    await db.insert(ticketMessages).values({
+      ticketId,
+      sender: 'user',
+      message
+    });
+
+    const [ticket] = await db.select().from(tickets).where(eq(tickets.id, ticketId));
+
+    await transporter.sendMail({
+      from: `"AUD TO BDT Support System" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER,
+      replyTo: email,
+      subject: `Re: [Ticket #${ticketId}] ${ticket.subject}`,
+      html: `<p><strong>Reply from ${email}:</strong></p><p>${message}</p>`,
+    });
+
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/support/tickets', async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) return res.json([]);
+    const [user] = await db.select().from(users).where(eq(users.email, email as string));
+    if (!user) return res.json([]);
+
+    const userTickets = await db.select().from(tickets).where(eq(tickets.userId, user.id)).orderBy(tickets.updatedAt);
+    res.json(userTickets);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/support/tickets/:id/messages', async (req, res) => {
+  try {
+    const msgs = await db.select().from(ticketMessages).where(eq(ticketMessages.ticketId, parseInt(req.params.id))).orderBy(ticketMessages.createdAt);
+    res.json(msgs);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+let lastSyncDate = new Date();
+lastSyncDate.setHours(lastSyncDate.getHours() - 24); // Look back 24 hours initially
+
+async function pollImap() {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
+  try {
+    const config = {
+      imap: {
+        user: process.env.EMAIL_USER,
+        password: process.env.EMAIL_PASS,
+        host: 'imap.hostinger.com',
+        port: 993,
+        tls: true,
+        tlsOptions: { rejectUnauthorized: false },
+        authTimeout: 10000
+      }
+    };
+
+    const connection = await imaps.connect(config);
+    const boxesToCheck = ['INBOX', 'INBOX.Sent'];
+
+    for (const box of boxesToCheck) {
+      try {
+        await connection.openBox(box);
+        const searchCriteria = ['UNSEEN'];
+        const fetchOptions = { bodies: ['HEADER', 'TEXT'], markSeen: true };
+        const messages = await connection.search(searchCriteria, fetchOptions);
+
+        for (const msg of messages) {
+          const header = msg.parts.find((p: any) => p.which === 'HEADER');
+          const textPart = msg.parts.find((p: any) => p.which === 'TEXT');
+          if (header && textPart) {
+            const parsed = await simpleParser(textPart.body);
+            const subject = parsed.subject || '';
+            const match = subject.match(/\[Ticket #(\d+)\]/i);
+            if (match) {
+              const ticketId = parseInt(match[1]);
+              const senderInfo = parsed.from?.value[0]?.address || '';
+
+              const isFromSupport = senderInfo.toLowerCase() === process.env.EMAIL_USER?.toLowerCase();
+
+              let cleanText = parsed.text || '(HTML Only)';
+              cleanText = cleanText.split(/\n[>_-]/)[0]; // strip simple quotes
+
+              await db.insert(ticketMessages).values({
+                ticketId,
+                sender: isFromSupport ? 'support' : 'user',
+                message: cleanText.trim()
+              });
+            }
+          }
+        }
+      } catch (boxError) {
+        // Box might not exist
+      }
+    }
+    connection.end();
+  } catch (err) {
+    console.error('IMAP Error:', err);
+  }
+}
+
+// Poll every 30 seconds
+setInterval(pollImap, 30000);
 
 async function startServer() {
   const PORT = Number(process.env.PORT) || 3000;

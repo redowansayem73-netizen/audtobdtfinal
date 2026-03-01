@@ -12,6 +12,7 @@ import AdminReports from './components/AdminReports';
 import AdminLogin from './components/AdminLogin';
 import AdminLayout from './components/AdminLayout';
 import UserLayout from './components/UserLayout';
+import Chatbox from './components/Chatbox';
 
 function App() {
     return (
@@ -40,6 +41,7 @@ function App() {
                         <Route path="/super-admin" element={<SuperAdminDashboard />} />
                     </Route>
                 </Routes>
+                <Chatbox />
             </div>
         </Router>
     );

@@ -56,3 +56,20 @@ export const beneficiaries = mysqlTable('beneficiaries', {
   routingNumber: varchar('routing_number', { length: 50 }),
   createdAt: timestamp('created_at').defaultNow(),
 });
+
+export const tickets = mysqlTable('tickets', {
+  id: serial('id').primaryKey(),
+  userId: bigint('user_id', { mode: 'number' }).notNull(),
+  subject: varchar('subject', { length: 255 }).notNull(),
+  status: varchar('status', { length: 50 }).default('open'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});
+
+export const ticketMessages = mysqlTable('ticket_messages', {
+  id: serial('id').primaryKey(),
+  ticketId: bigint('ticket_id', { mode: 'number' }).notNull(),
+  sender: varchar('sender', { length: 50 }).notNull(), // 'user' | 'support'
+  message: text('message').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
