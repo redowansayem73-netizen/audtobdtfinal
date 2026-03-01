@@ -86,7 +86,7 @@ export default function LandingPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
                         {/* Text Content */}
-                        <div className="max-w-2xl space-y-8 text-center lg:text-left">
+                        <div className="max-w-2xl space-y-8 text-center lg:text-left lg:-mt-10">
                             <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-emerald-50 text-emerald-700 text-sm font-black tracking-widest uppercase border border-emerald-100">
                                 <span className="relative flex h-2 w-2">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
