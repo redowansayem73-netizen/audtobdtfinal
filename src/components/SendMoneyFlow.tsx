@@ -496,6 +496,17 @@ export default function SendMoneyFlow() {
                   </div>
                 </div>
 
+                <div className="w-full bg-white rounded-xl p-4 border border-slate-200 shadow-sm mb-8 mt-2">
+                  <div className="flex justify-between items-center mb-3 border-b border-slate-50 pb-3">
+                    <span className="text-xs font-extrabold text-slate-500 uppercase tracking-widest">You sent:</span>
+                    <span className="text-lg font-black text-slate-900">${amountAud.toFixed(2)} AUD</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-extrabold text-slate-500 uppercase tracking-widest">Receiver Gets:</span>
+                    <span className="text-lg font-black text-emerald-600">৳ {amountBdt.toLocaleString()} BDT</span>
+                  </div>
+                </div>
+
                 <div className="w-full relative z-10">
                   <h3 className="font-black text-slate-900 text-[11px] uppercase tracking-[0.2em] flex items-center gap-2 mb-6 ml-1">
                     <div className="w-1.5 h-1.5 bg-slate-900 rounded-full"></div>
