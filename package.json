@@ -5,6 +5,7 @@
     "type": "module",
     "scripts": {
         "dev": "tsx watch --ignore \"**/*.timestamp-*.mjs\" server.ts",
+        "start": "NODE_ENV=production npx tsx server.ts",
         "build": "vite build",
         "preview": "vite preview",
         "db:push": "drizzle-kit push:mysql"
