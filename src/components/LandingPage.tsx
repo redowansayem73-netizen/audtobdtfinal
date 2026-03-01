@@ -78,7 +78,7 @@ export default function LandingPage() {
             </nav>
 
             {/* Hero Section - SEND TAKA TO HOME */}
-            <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+            <section className="relative pt-24 pb-16 lg:pt-36 lg:pb-24 overflow-hidden">
                 {/* Background Decorations */}
                 <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[600px] h-[600px] bg-emerald-50 rounded-full blur-3xl -z-10 opacity-50"></div>
                 <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[500px] h-[500px] bg-blue-50 rounded-full blur-3xl -z-10 opacity-50"></div>
