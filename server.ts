@@ -13,6 +13,26 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// --- HOSTINGER DEBUG LOGGING WIDGET ---
+const debugStream = fs.createWriteStream('hostinger-debug.txt', { flags: 'a' });
+const origLog = console.log;
+const origErr = console.error;
+console.log = (...args) => {
+  debugStream.write(`[LOG] [${new Date().toISOString()}] ${args.join(' ')}\n`);
+  origLog(...args);
+};
+console.error = (...args) => {
+  debugStream.write(`[ERR] [${new Date().toISOString()}] ${args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : a).join(' ')}\n`);
+  origErr(...args);
+};
+process.on('uncaughtException', (err) => {
+  console.error('CRITICAL UNCAUGHT EXCEPTION:', err?.stack || err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('CRITICAL UNHANDLED REJECTION:', reason);
+});
+// --------------------------------------
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(cors());
