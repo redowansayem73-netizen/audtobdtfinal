@@ -23,14 +23,9 @@ const server = http.createServer((req, res) => {
             <p><strong>Current Time:</strong> ${new Date().toISOString()}</p>
             <p><strong>Node.js Version:</strong> ${process.version}</p>
             <p><strong>Running in directory:</strong> ${process.cwd()}</p>
-
-            <div class="log-section">
-                <span class="filename">Environment Variables (Keys Only)</span>
-                <pre>${Object.keys(process.env).sort().join('\n')}</pre>
-            </div>
     `);
 
-    const logFiles = ['hostinger-debug.txt', 'error.log', 'startup.log'];
+    const logFiles = ['.env', 'hostinger-debug.txt', 'error.log', 'startup.log'];
 
     for (const fileName of logFiles) {
         const filePath = path.join(process.cwd(), fileName);
@@ -38,6 +33,10 @@ const server = http.createServer((req, res) => {
         res.write(`<span class="filename">${fileName}</span>`);
         try {
             if (fs.existsSync(filePath)) {
+                if (fileName === '.env') {
+                    res.write(`<p style="color: #4CAF50;">✅ File is present on the server.</p>`);
+                    continue;
+                }
                 const stats = fs.statSync(filePath);
                 if (stats.size > 0) {
                     const content = fs.readFileSync(filePath, 'utf8');
