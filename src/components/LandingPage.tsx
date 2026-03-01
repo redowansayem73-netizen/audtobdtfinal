@@ -78,7 +78,7 @@ export default function LandingPage() {
             </nav>
 
             {/* Hero Section - SEND TAKA TO HOME */}
-            <section className="relative pt-24 pb-16 lg:pt-36 lg:pb-24 overflow-hidden">
+            <section className="relative pt-24 pb-16 lg:pt-28 lg:pb-24 overflow-hidden">
                 {/* Background Decorations */}
                 <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[600px] h-[600px] bg-emerald-50 rounded-full blur-3xl -z-10 opacity-50"></div>
                 <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[500px] h-[500px] bg-blue-50 rounded-full blur-3xl -z-10 opacity-50"></div>
@@ -86,7 +86,7 @@ export default function LandingPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
                         {/* Text Content */}
-                        <div className="max-w-2xl space-y-8 text-center lg:text-left lg:-mt-10">
+                        <div className="max-w-2xl space-y-8 text-center lg:text-left lg:-mt-32">
                             <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-emerald-50 text-emerald-700 text-sm font-black tracking-widest uppercase border border-emerald-100">
                                 <span className="relative flex h-2 w-2">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
