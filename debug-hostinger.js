@@ -23,6 +23,11 @@ const server = http.createServer((req, res) => {
             <p><strong>Current Time:</strong> ${new Date().toISOString()}</p>
             <p><strong>Node.js Version:</strong> ${process.version}</p>
             <p><strong>Running in directory:</strong> ${process.cwd()}</p>
+
+            <div class="log-section">
+                <span class="filename">Environment Variables (Keys Only)</span>
+                <pre>${Object.keys(process.env).sort().join('\n')}</pre>
+            </div>
     `);
 
     const logFiles = ['hostinger-debug.txt', 'error.log', 'startup.log'];
