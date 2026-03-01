@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { Loader2, ArrowRight, ArrowLeft, CheckCircle2, Building2, Smartphone, ShieldCheck, Mail, User, Clock, Info, Zap, Shield, AlertCircle, Lock } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft, CheckCircle2, Building2, Smartphone, ShieldCheck, Mail, User, Clock, Info, Zap, Shield, AlertCircle, Lock, Check } from 'lucide-react';
 
 const stripePromise = loadStripe((import.meta as any).env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_sample');
 
@@ -508,15 +508,17 @@ export default function SendMoneyFlow() {
 
                     <ul className="space-y-5 relative">
                       {[
-                        { step: 1, text: 'Payment Received', time: '1-5 MINS' },
-                        { step: 2, text: 'BDT disbursement', time: 'IN PROGRESS' },
-                        { step: 3, text: 'Receipt sent to your email', time: 'FINAL STEP' }
+                        { step: 1, text: 'Payment Received', time: 'SUCCESS', active: true },
+                        { step: 2, text: 'BDT disbursement', time: 'IN PROGRESS', active: false },
+                        { step: 3, text: 'Receipt sent to your email', time: 'FINAL STEP', active: false }
                       ].map((m) => (
                         <li key={m.step} className="flex gap-4 items-center">
-                          <div className="w-7 h-7 rounded-full bg-slate-900 text-white flex items-center justify-center text-[11px] font-black shrink-0 relative z-10">{m.step}</div>
+                          <div className={`w-7 h-7 rounded-full text-white flex items-center justify-center text-[11px] font-black shrink-0 relative z-10 ${m.active ? 'bg-emerald-500' : 'bg-slate-900'}`}>
+                            {m.active ? <Check size={14} strokeWidth={4} /> : m.step}
+                          </div>
                           <div className="-mt-1">
                             <p className="text-sm text-slate-900 font-bold leading-none mb-1">{m.text}</p>
-                            <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{m.time}</p>
+                            <p className={`text-[9px] font-black uppercase tracking-widest ${m.active ? 'text-emerald-500' : 'text-slate-400'}`}>{m.time}</p>
                           </div>
                         </li>
                       ))}
