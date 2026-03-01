@@ -175,11 +175,19 @@ export default function LandingPage() {
             <section className="py-20 bg-slate-900 text-white overflow-hidden">
                 <div className="max-w-7xl mx-auto px-4 text-center space-y-12">
                     <h2 className="text-3xl font-bold">Supported Methods</h2>
-                    <div className="flex flex-wrap justify-center gap-8 opacity-70">
-                        <div className="px-8 py-4 bg-white/5 rounded-2xl border border-white/10 font-bold text-xl">bKash</div>
-                        <div className="px-8 py-4 bg-white/5 rounded-2xl border border-white/10 font-bold text-xl">Nagad</div>
-                        <div className="px-8 py-4 bg-white/5 rounded-2xl border border-white/10 font-bold text-xl">Rocket</div>
-                        <div className="px-8 py-4 bg-white/5 rounded-2xl border border-white/10 font-bold text-xl">Any Bank BD</div>
+                    <div className="flex flex-wrap justify-center items-center gap-8">
+                        <div className="group bg-white p-4 rounded-2xl border border-white/10 shadow-sm hover:scale-110 transition-transform duration-300">
+                            <img src="/bkash.png" alt="bKash" className="h-10 w-auto object-contain" />
+                        </div>
+                        <div className="group bg-white p-4 rounded-2xl border border-white/10 shadow-sm hover:scale-110 transition-transform duration-300">
+                            <img src="/nagad.png" alt="Nagad" className="h-10 w-auto object-contain" />
+                        </div>
+                        <div className="group bg-white p-4 rounded-2xl border border-white/10 shadow-sm hover:scale-110 transition-transform duration-300">
+                            <img src="/rocket.png" alt="Rocket" className="h-10 w-auto object-contain" />
+                        </div>
+                        <div className="px-8 py-4 bg-white/5 rounded-2xl border border-white/10 font-bold text-xl hover:bg-white/10 transition-colors cursor-default">
+                            Any Bank BD
+                        </div>
                     </div>
                 </div>
             </section>
