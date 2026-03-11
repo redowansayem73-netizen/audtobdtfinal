@@ -408,6 +408,29 @@ app.post('/api/user/beneficiaries', async (req, res) => {
   }
 });
 
+app.put('/api/user/beneficiaries/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, type, provider, accountName, accountNumber, bankName, branchName, routingNumber } = req.body;
+    await db.update(beneficiaries).set({
+      name, type, provider, accountName, accountNumber, bankName, branchName, routingNumber
+    }).where(eq(beneficiaries.id, Number(id)));
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/user/beneficiaries/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.delete(beneficiaries).where(eq(beneficiaries.id, Number(id)));
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Dashboard Routes
 app.get('/api/user/transfers', async (req, res) => {
   try {

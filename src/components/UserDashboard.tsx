@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Loader2, History, Clock, CheckCircle2, Check, Send, Globe, LogOut, DollarSign, Wallet, Users, Zap, Smartphone, Building2, ArrowRight, ArrowLeft, Download, X, User as UserIcon, Mail, Phone, MapPin, Save } from 'lucide-react';
+import { Loader2, History, Clock, CheckCircle2, Check, Send, Globe, LogOut, DollarSign, Wallet, Users, Zap, Smartphone, Building2, ArrowRight, ArrowLeft, Download, X, User as UserIcon, Mail, Phone, MapPin, Save, Search, Plus, Edit2, Trash2 } from 'lucide-react';
 
 export default function UserDashboard() {
     const [transfers, setTransfers] = useState<any[]>([]);
@@ -17,9 +17,25 @@ export default function UserDashboard() {
         name: '',
         email: '',
         mobile: '',
-        address: ''
+        address: '',
+        avatar: ''
     });
     const [isUpdating, setIsUpdating] = useState(false);
+    
+    // Beneficiary CRUD State
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isBenModalOpen, setIsBenModalOpen] = useState(false);
+    const [editingBenId, setEditingBenId] = useState<number | null>(null);
+    const [benFormData, setBenFormData] = useState({
+        name: '',
+        type: 'mobile_wallet',
+        provider: 'bkash',
+        accountName: '',
+        accountNumber: '',
+        bankName: '',
+        branchName: '',
+        routingNumber: ''
+    });
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -68,7 +84,8 @@ export default function UserDashboard() {
             name: parsedUser.name || '',
             email: parsedUser.email || '',
             mobile: parsedUser.mobile || '',
-            address: parsedUser.address || ''
+            address: parsedUser.address || '',
+            avatar: parsedUser.avatar || ''
         });
         fetchDashboardData(parsedUser.email);
     }, [navigate]);
@@ -105,7 +122,8 @@ export default function UserDashboard() {
                     name: userData.name || '',
                     email: userData.email || '',
                     mobile: userData.mobile || '',
-                    address: userData.address || ''
+                    address: userData.address || '',
+                    avatar: userData.avatar || ''
                 });
                 localStorage.setItem('user', JSON.stringify(userData));
             }
@@ -150,6 +168,68 @@ export default function UserDashboard() {
         localStorage.removeItem('loginTimestamp');
         navigate('/');
     };
+
+    const handleSaveBeneficiary = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const url = editingBenId 
+                ? `/api/user/beneficiaries/${editingBenId}` 
+                : '/api/user/beneficiaries';
+            const method = editingBenId ? 'PUT' : 'POST';
+            
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: user.email, ...benFormData })
+            });
+            
+            if (res.ok) {
+                setIsBenModalOpen(false);
+                fetchDashboardData(user.email); // refresh
+            } else {
+                alert('Failed to save receiver');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleDeleteBeneficiary = async (id: number) => {
+        if (!window.confirm('Are you sure you want to remove this receiver?')) return;
+        try {
+            const res = await fetch(`/api/user/beneficiaries/${id}`, { method: 'DELETE' });
+            if (res.ok) fetchDashboardData(user.email);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const openBenModal = (ben?: any) => {
+        if (ben) {
+            setEditingBenId(ben.id);
+            setBenFormData({
+                name: ben.name,
+                type: ben.type,
+                provider: ben.provider || 'bkash',
+                accountName: ben.accountName,
+                accountNumber: ben.accountNumber,
+                bankName: ben.bankName || '',
+                branchName: ben.branchName || '',
+                routingNumber: ben.routingNumber || ''
+            });
+        } else {
+            setEditingBenId(null);
+            setBenFormData({
+                name: '', type: 'mobile_wallet', provider: 'bkash', accountName: '', accountNumber: '', bankName: '', branchName: '', routingNumber: ''
+            });
+        }
+        setIsBenModalOpen(true);
+    };
+
+    const filteredBeneficiaries = beneficiaries.filter(b => 
+        b.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        b.accountNumber.includes(searchTerm)
+    );
 
     // Calculate Personal Stats
     const stats = transfers.reduce((acc, curr) => {
@@ -255,8 +335,8 @@ Delivery Method: ${tx.method}
                             </button>
                         </div>
 
-                        {/* Personal Analytics Row - Mobile Scrollable */}
-                        <div className="flex overflow-x-auto md:grid md:grid-cols-3 gap-4 md:gap-6 mb-10 pb-4 md:pb-0 hide-scrollbar snap-x mx-[-1rem] px-[1rem] md:px-0 md:mx-0">
+                        {/* Personal Analytics Row - Desktop Only */}
+                        <div className="hidden md:grid md:grid-cols-3 gap-4 md:gap-6 mb-10 pb-0 mx-0">
                             
                             <div className="min-w-[280px] md:min-w-0 shrink-0 snap-center bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-3xl p-6 shadow-xl shadow-emerald-200/50 relative overflow-hidden group text-white">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110 blur-sm"></div>
@@ -298,7 +378,7 @@ Delivery Method: ${tx.method}
                             </div>
                         </div>
 
-                        <div className="grid lg:grid-cols-3 gap-10">
+                        <div className="hidden md:grid lg:grid-cols-3 gap-10">
                             {/* Left Column: Flow & Action */}
                             <div className="lg:col-span-2 space-y-10">
                                 {/* Dynamic Send Money Widget */}
@@ -622,40 +702,59 @@ Delivery Method: ${tx.method}
                             <ArrowLeft className="w-4 h-4" /> Back to Dashboard
                         </button>
                         
-                        <div className="flex items-center justify-between mb-6">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                             <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
                                 <div className="w-2 h-8 bg-emerald-500 rounded-full"></div>
                                 <Users className="w-6 h-6 text-emerald-600" />
                                 All Saved Receivers
                             </h2>
+                            
+                            <div className="flex items-center gap-3">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search receivers..." 
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none w-full md:w-64"
+                                    />
+                                </div>
+                                <button onClick={() => openBenModal()} className="bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-emerald-600 transition-colors shrink-0">
+                                    <Plus className="w-4 h-4" /> Add New
+                                </button>
+                            </div>
                         </div>
 
                         <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 p-5">
-                            {beneficiaries.length === 0 ? (
+                            {filteredBeneficiaries.length === 0 ? (
                                 <div className="p-12 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
                                     <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
                                         <Users className="w-8 h-8" />
                                     </div>
-                                    <h3 className="text-lg font-bold text-slate-900">No saved receivers found</h3>
-                                    <p className="text-slate-500 mt-2">They will be saved automatically when you send money.</p>
+                                    <h3 className="text-lg font-bold text-slate-900">{searchTerm ? 'No receivers match your search' : 'No saved receivers found'}</h3>
+                                    <p className="text-slate-500 mt-2">{searchTerm ? 'Try a different name or number.' : 'They will be saved automatically when you send money, or you can add one now.'}</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {beneficiaries.map(ben => (
+                                    {filteredBeneficiaries.map(ben => (
                                         <div 
                                           key={ben.id} 
-                                          className="p-5 rounded-2xl border border-slate-100 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-100/50 transition-all flex flex-col justify-between h-40 group cursor-pointer bg-white" 
-                                          onClick={() => navigate('/send', { state: { amountAud: sendAmount || 1000, beneficiary: ben } })}
+                                          className="p-5 rounded-2xl border border-slate-100 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-100/50 transition-all flex flex-col justify-between h-44 group bg-white relative" 
                                         >
                                             <div className="flex justify-between items-start">
-                                                <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center shrink-0 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                                                <div 
+                                                    className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center shrink-0 text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors cursor-pointer"
+                                                    onClick={() => navigate('/send', { state: { amountAud: sendAmount || 1000, beneficiary: ben } })}
+                                                >
                                                     {ben.type === 'mobile_wallet' ? <Smartphone className="w-6 h-6" /> : <Building2 className="w-6 h-6" />}
                                                 </div>
-                                                <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <ArrowRight className="w-4 h-4 text-emerald-600" />
+                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => openBenModal(ben)} className="p-2 text-slate-400 hover:text-blue-600 bg-slate-50 rounded-lg"><Edit2 className="w-4 h-4"/></button>
+                                                    <button onClick={() => handleDeleteBeneficiary(ben.id)} className="p-2 text-slate-400 hover:text-red-600 bg-slate-50 rounded-lg"><Trash2 className="w-4 h-4"/></button>
                                                 </div>
                                             </div>
-                                            <div>
+                                            <div className="cursor-pointer mt-2" onClick={() => navigate('/send', { state: { amountAud: sendAmount || 1000, beneficiary: ben } })}>
                                                 <div className="font-bold text-slate-900 text-base truncate">{ben.name}</div>
                                                 <div className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-wider truncate bg-slate-50 inline-block px-2 py-1 rounded border border-slate-100">{ben.provider || ben.bankName} • {ben.accountNumber.slice(-4)}</div>
                                             </div>
@@ -679,6 +778,44 @@ Delivery Method: ${tx.method}
                             {/* Form Side */}
                             <div className="md:col-span-2 p-8 md:p-12 border-r border-slate-100">
                                 <form onSubmit={handleUpdateProfile} className="space-y-6">
+                                    {/* Avatar Upload */}
+                                    <div className="flex items-center gap-6 mb-8">
+                                        <div className="relative group shrink-0">
+                                            <div className="w-24 h-24 rounded-full bg-slate-100 border-4 border-white shadow-lg overflow-hidden flex items-center justify-center">
+                                                {profileData.avatar ? (
+                                                    <img src={profileData.avatar} alt="Profile" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <UserIcon className="w-10 h-10 text-slate-300" />
+                                                )}
+                                            </div>
+                                            <label className="absolute bottom-0 right-0 w-8 h-8 bg-emerald-600 rounded-full border-2 border-white flex items-center justify-center cursor-pointer shadow-sm hover:bg-emerald-700 transition-colors">
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            const reader = new FileReader();
+                                                            reader.onloadend = () => {
+                                                                setProfileData({ ...profileData, avatar: reader.result as string });
+                                                            };
+                                                            reader.readAsDataURL(file);
+                                                        }
+                                                    }}
+                                                />
+                                                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                            </label>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-black text-slate-900">Profile Picture</h3>
+                                            <p className="text-xs text-slate-500 font-bold mt-1">PNG, JPG up to 5MB</p>
+                                        </div>
+                                    </div>
+
                                     <div className="grid md:grid-cols-2 gap-6">
                                         <div className="space-y-2">
                                             <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Full Name</label>
@@ -868,6 +1005,145 @@ Delivery Method: ${tx.method}
                                 <span className="text-xs font-bold text-slate-500">Receiver</span>
                                 <span className="text-sm font-black text-slate-900">{selectedTx.accountName}</span>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Beneficiary Modal */}
+            {isBenModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsBenModalOpen(false)}></div>
+                    <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg relative z-10 overflow-hidden flex flex-col max-h-[90vh]">
+                        {/* Header */}
+                        <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-20">
+                            <h3 className="font-black text-xl text-slate-900">{editingBenId ? 'Edit Receiver' : 'Add New Receiver'}</h3>
+                            <button onClick={() => setIsBenModalOpen(false)} className="w-8 h-8 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-500 flex items-center justify-center transition-colors">
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 overflow-y-auto w-full">
+                            <form id="benForm" onSubmit={handleSaveBeneficiary} className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Receiver Name / Alias</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={benFormData.name}
+                                        onChange={e => setBenFormData({ ...benFormData, name: e.target.value })}
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-bold text-slate-900"
+                                        placeholder="E.g., Mom's bKash or John Doe"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Transfer Type</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setBenFormData({ ...benFormData, type: 'mobile_wallet' })}
+                                            className={`py-3 rounded-xl font-bold flex items-center justify-center gap-2 border-2 transition-all ${benFormData.type === 'mobile_wallet' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-white text-slate-500 hover:border-slate-300'}`}
+                                        >
+                                            <Smartphone className="w-4 h-4" /> Mobile Wallet
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setBenFormData({ ...benFormData, type: 'bank_transfer' })}
+                                            className={`py-3 rounded-xl font-bold flex items-center justify-center gap-2 border-2 transition-all ${benFormData.type === 'bank_transfer' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-white text-slate-500 hover:border-slate-300'}`}
+                                        >
+                                            <Building2 className="w-4 h-4" /> Bank Transfer
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {benFormData.type === 'mobile_wallet' && (
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Wallet Provider</label>
+                                        <select
+                                            value={benFormData.provider}
+                                            onChange={e => setBenFormData({ ...benFormData, provider: e.target.value })}
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-bold text-slate-900 appearance-none"
+                                        >
+                                            <option value="bkash">bKash</option>
+                                            <option value="nagad">Nagad</option>
+                                            <option value="rocket">Rocket</option>
+                                            <option value="upay">Upay</option>
+                                        </select>
+                                    </div>
+                                )}
+
+                                {benFormData.type === 'bank_transfer' && (
+                                    <>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Bank Name</label>
+                                            <input
+                                                type="text"
+                                                required={benFormData.type === 'bank_transfer'}
+                                                value={benFormData.bankName}
+                                                onChange={e => setBenFormData({ ...benFormData, bankName: e.target.value })}
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-bold text-slate-900"
+                                                placeholder="e.g. Dutch Bangla Bank"
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Branch</label>
+                                                <input
+                                                    type="text"
+                                                    value={benFormData.branchName}
+                                                    onChange={e => setBenFormData({ ...benFormData, branchName: e.target.value })}
+                                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-bold text-slate-900"
+                                                    placeholder="Branch Name"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Routing No.</label>
+                                                <input
+                                                    type="text"
+                                                    value={benFormData.routingNumber}
+                                                    onChange={e => setBenFormData({ ...benFormData, routingNumber: e.target.value })}
+                                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-bold text-slate-900"
+                                                    placeholder="Routing Number"
+                                                />
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Account Holder Name</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={benFormData.accountName}
+                                        onChange={e => setBenFormData({ ...benFormData, accountName: e.target.value })}
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-bold text-slate-900"
+                                        placeholder="Exact name on account"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Account Number</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={benFormData.accountNumber}
+                                        onChange={e => setBenFormData({ ...benFormData, accountNumber: e.target.value })}
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none font-bold text-slate-900 tracking-wider"
+                                        placeholder="Account or Mobile Number"
+                                    />
+                                </div>
+                            </form>
+                        </div>
+
+                        {/* Footer Layout Info */}
+                        <div className="bg-slate-50 p-6 border-t border-slate-100 shrink-0">
+                            <button
+                                type="submit"
+                                form="benForm"
+                                className="w-full bg-slate-900 text-white rounded-xl py-4 font-black flex items-center justify-center gap-2 hover:bg-emerald-600 transition-colors shadow-lg shadow-slate-200/50"
+                            >
+                                <Save className="w-5 h-5" /> Save Receiver Details
+                            </button>
                         </div>
                     </div>
                 </div>

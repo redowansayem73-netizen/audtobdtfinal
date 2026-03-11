@@ -14,6 +14,8 @@ import AdminLayout from './components/AdminLayout';
 import UserLayout from './components/UserLayout';
 import Chatbox from './components/Chatbox';
 import FAQSupportPage from './components/FAQSupportPage';
+import Terms from './components/Terms';
+import Privacy from './components/Privacy';
 import { useLocation } from 'react-router-dom';
 
 const GlobalChatbox = () => {
@@ -32,6 +34,8 @@ function App() {
                     {/* Standalone Routes */}
                     <Route path="/" element={<LandingPage />} />
                     <Route path="/support" element={<FAQSupportPage />} />
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/privacy" element={<Privacy />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/admin-login" element={<AdminLogin />} />
                     <Route path="/admin/login" element={<AdminLogin />} />

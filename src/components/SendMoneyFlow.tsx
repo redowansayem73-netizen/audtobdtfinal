@@ -59,8 +59,10 @@ export default function SendMoneyFlow() {
         .then(res => res.json())
         .then(setSavedBeneficiaries)
         .catch(console.error);
+    } else {
+      navigate('/login', { state: { returnTo: '/send', amountAud: initialAmount } });
     }
-  }, []);
+  }, [navigate, initialAmount]);
 
   const handleAudChange = (val: number) => {
     setAmountAud(val);
@@ -326,14 +328,15 @@ export default function SendMoneyFlow() {
 
                 {deliveryMethod === 'mobile_wallet' ? (
                   <div className="grid grid-cols-1 gap-3">
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-3">
                       {['bkash', 'nagad', 'rocket'].map(p => (
                         <button
                           key={p}
                           onClick={() => setWalletProvider(p)}
-                          className={`py-2 text-xs rounded-xl border-2 font-bold capitalize transition-all ${walletProvider === p ? 'border-slate-900 bg-slate-900 text-white shadow-md' : 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200'}`}
+                          className={`py-3 px-2 flex flex-col items-center justify-center gap-2 rounded-2xl border-2 font-bold capitalize transition-all overflow-hidden ${walletProvider === p ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-md transform scale-[1.02]' : 'border-slate-100 bg-white text-slate-400 hover:border-emerald-200 hover:bg-emerald-50/50 hover:shadow-sm'}`}
                         >
-                          {p}
+                          <img src={`/${p}.png`} alt={p} className={`h-8 w-auto object-contain transition-all duration-300 ${walletProvider === p ? 'grayscale-0 scale-110' : 'grayscale opacity-50'}`} />
+                          <span className="text-[10px] tracking-widest uppercase">{p}</span>
                         </button>
                       ))}
                     </div>

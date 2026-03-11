@@ -352,11 +352,11 @@ export default function LandingPage() {
                 <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8">
                     <img src="/logo.png" alt="AUD TO BDT" className="h-10 w-auto opacity-50 grayscale" />
                     <div className="text-slate-400 text-sm font-bold uppercase tracking-widest">
-                        © 2024 AUDtoBDT. Australian Registered Service.
+                        © {new Date().getFullYear()} AUDtoBDT. Australian Registered Service.
                     </div>
                     <div className="flex gap-8">
-                        <Link to="/login" className="text-slate-400 hover:text-slate-900 font-bold text-xs uppercase tracking-widest">Terms</Link>
-                        <Link to="/login" className="text-slate-400 hover:text-slate-900 font-bold text-xs uppercase tracking-widest">Privacy</Link>
+                        <Link to="/terms" className="text-slate-400 hover:text-slate-900 font-bold text-xs uppercase tracking-widest">Terms</Link>
+                        <Link to="/privacy" className="text-slate-400 hover:text-slate-900 font-bold text-xs uppercase tracking-widest">Privacy</Link>
                     </div>
                 </div>
             </footer>

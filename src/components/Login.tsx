@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Loader2, Mail, ShieldCheck, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export default function Login() {
@@ -9,6 +9,9 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = location.state?.returnTo || '/dashboard';
+  const returnAmountAud = location.state?.amountAud;
 
   const handleRequestCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +50,7 @@ export default function Login() {
       if (data.success) {
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('loginTimestamp', Date.now().toString());
-        navigate('/dashboard');
+        navigate(returnTo, { state: returnAmountAud ? { amountAud: returnAmountAud } : undefined });
       } else {
         setError(data.error || 'Invalid code');
       }

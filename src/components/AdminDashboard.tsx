@@ -11,6 +11,8 @@ export default function AdminDashboard() {
   const [editingRate, setEditingRate] = useState(false);
   const [newRate, setNewRate] = useState('');
   const [isUpdatingRate, setIsUpdatingRate] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showActivity, setShowActivity] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -93,7 +95,13 @@ export default function AdminDashboard() {
     }
   };
 
-  const filteredTransfers = transfers.filter(tx => filter === 'all' || tx.status === filter);
+  const filteredTransfers = transfers.filter(tx => 
+    (filter === 'all' || tx.status === filter) &&
+    (tx.id.toString().includes(searchTerm) || 
+     (tx.userName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+     (tx.accountName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+     (tx.userEmail || '').toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   const stats = transfers.reduce((acc, tx) => {
     if (tx.status === 'pending') acc.pendingCount++;
@@ -124,11 +132,14 @@ export default function AdminDashboard() {
           </div>
 
           <div className="flex items-center gap-4">
+            <a href="/admin/reports" className="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 font-bold rounded-xl transition-colors border border-slate-200 hover:border-emerald-200">
+              <LineChart className="w-4 h-4" /> Audit & Reports
+            </a>
             <div className="text-right hidden sm:block">
               <p className="text-sm font-black text-slate-900">{JSON.parse(localStorage.getItem('user') || '{}').name || 'Staff'}</p>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Authorized Access</p>
             </div>
-            <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center font-black text-slate-700 border-2 border-white shadow-sm uppercase">
+            <div className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center font-black text-white border-2 border-white shadow-sm uppercase">
               {(JSON.parse(localStorage.getItem('user') || '{}').name || 'ST').substring(0, 2)}
             </div>
           </div>
@@ -204,25 +215,40 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8">
           <div>
             <h1 className="text-3xl font-extrabold text-slate-900">Transaction Management</h1>
-            <p className="text-slate-500 mt-1 font-medium">Manage and process transfers to destination accounts.</p>
+            <p className="text-slate-500 mt-1 font-medium">Manage and process transfers. Track audit logs continuously.</p>
           </div>
 
-          <div className="flex gap-2 p-1 bg-white rounded-2xl border border-slate-200 shadow-sm self-start">
-            {['all', 'pending', 'paid', 'sent'].map((s) => (
-              <button
-                key={s}
-                onClick={() => setFilter(s)}
-                className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${filter === s
-                  ? (s === 'sent' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100' : 'bg-slate-900 text-white shadow-lg shadow-slate-200')
-                  : 'text-slate-400 hover:text-slate-600'
-                  }`}
-              >
-                {s.charAt(0).toUpperCase() + s.slice(1)}
-              </button>
-            ))}
+          <div className="flex flex-col sm:flex-row gap-4 items-center w-full xl:w-auto">
+            {/* Search Bar */}
+            <div className="relative w-full sm:w-64 shrink-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input 
+                    type="text" 
+                    placeholder="Search ID, Name, Email..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all shadow-sm"
+                />
+            </div>
+            
+            {/* Filters */}
+            <div className="flex gap-2 p-1 bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto w-full sm:w-auto">
+              {['all', 'pending', 'paid', 'sent'].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setFilter(s)}
+                  className={`px-5 py-2 rounded-lg text-xs font-black tracking-wide uppercase transition-all whitespace-nowrap ${filter === s
+                    ? (s === 'sent' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200' : 'bg-slate-900 text-white shadow-md shadow-slate-200')
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                    }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
