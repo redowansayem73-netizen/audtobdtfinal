@@ -333,10 +333,9 @@ export default function SendMoneyFlow() {
                         <button
                           key={p}
                           onClick={() => setWalletProvider(p)}
-                          className={`py-3 px-2 flex flex-col items-center justify-center gap-2 rounded-2xl border-2 font-bold capitalize transition-all overflow-hidden ${walletProvider === p ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-md transform scale-[1.02]' : 'border-slate-100 bg-white text-slate-400 hover:border-emerald-200 hover:bg-emerald-50/50 hover:shadow-sm'}`}
+                          className={`py-2 px-2 flex items-center justify-center rounded-xl border-2 transition-all overflow-hidden ${walletProvider === p ? 'border-emerald-500 bg-emerald-50 shadow-sm transform scale-[1.02]' : 'border-slate-100 bg-white hover:border-emerald-200 hover:bg-emerald-50/50 hover:shadow-sm'}`}
                         >
-                          <img src={`/${p}.png`} alt={p} className={`h-8 w-auto object-contain transition-all duration-300 ${walletProvider === p ? 'grayscale-0 scale-110' : 'grayscale opacity-50'}`} />
-                          <span className="text-[10px] tracking-widest uppercase">{p}</span>
+                          <img src={`/${p}.png`} alt={p} className={`h-7 w-auto object-contain transition-all duration-300 ${walletProvider === p ? 'grayscale-0 scale-110' : 'grayscale opacity-50'}`} />
                         </button>
                       ))}
                     </div>
