@@ -335,8 +335,8 @@ Delivery Method: ${tx.method}
                             </button>
                         </div>
 
-                        {/* Personal Analytics Row - Desktop Only */}
-                        <div className="hidden md:grid md:grid-cols-3 gap-4 md:gap-6 mb-10 pb-0 mx-0">
+                        {/* Personal Analytics Row - Mobile Scrollable & Desktop Grid */}
+                        <div className="flex overflow-x-auto md:grid md:grid-cols-3 gap-4 md:gap-6 mb-10 pb-4 mx-0 snap-x hide-scrollbar">
                             
                             <div className="min-w-[280px] md:min-w-0 shrink-0 snap-center bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-3xl p-6 shadow-xl shadow-emerald-200/50 relative overflow-hidden group text-white">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110 blur-sm"></div>
@@ -774,9 +774,8 @@ Delivery Method: ${tx.method}
                     </div>
 
                     <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
-                        <div className="grid md:grid-cols-3">
+                        <div className="p-8 md:p-12">
                             {/* Form Side */}
-                            <div className="md:col-span-2 p-8 md:p-12 border-r border-slate-100">
                                 <form onSubmit={handleUpdateProfile} className="space-y-6">
                                     {/* Avatar Upload */}
                                     <div className="flex items-center gap-6 mb-8">
@@ -884,28 +883,6 @@ Delivery Method: ${tx.method}
                                         Save Profile Updates
                                     </button>
                                 </form>
-                            </div>
-
-                            {/* Info Side */}
-                            <div className="bg-slate-50/50 p-8 md:p-12 flex flex-col justify-center gap-8">
-                                <div className="space-y-4">
-                                    <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center text-emerald-600">
-                                        <Globe className="w-6 h-6" />
-                                    </div>
-                                    <h3 className="text-xl font-black text-slate-900">Security Notice</h3>
-                                    <p className="text-sm text-slate-500 font-medium leading-relaxed">
-                                        Keep your personal details up to date to ensure smooth transaction verification. Your address is required for international remittance compliance.
-                                    </p>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Contact Support</h4>
-                                    <p className="text-sm font-bold text-slate-700">Need help updating your verified email? Reach out to support.</p>
-                                    <button className="text-emerald-600 font-black text-sm uppercase tracking-widest border-b-2 border-emerald-600/20 hover:border-emerald-600 transition-all">
-                                        Contact Support
-                                    </button>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </section>
