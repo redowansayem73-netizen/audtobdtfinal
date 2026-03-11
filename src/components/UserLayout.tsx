@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Send, LogOut, ArrowLeft, Globe, Menu, X, User, History, Users, Settings } from 'lucide-react';
+import { LayoutDashboard, Send, LogOut, ArrowLeft, Globe, Menu, X, User, History, Users, Settings, Headset } from 'lucide-react';
 
 export default function UserLayout() {
     const navigate = useNavigate();
@@ -45,22 +45,16 @@ export default function UserLayout() {
             {/* Top Navbar */}
             <header className="sticky top-0 z-50 bg-white border-b border-slate-100 px-6 py-4">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    {/* Logo Area (65%) */}
-                    <div className="flex-[0.65] flex flex-col justify-start cursor-pointer group" onClick={() => navigate('/dashboard')}>
-                        <img src="/logo.png" alt="AUD TO BDT" className="h-10 md:h-12 w-auto object-contain" />
-                        <div className="mt-1">
-                            <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest block ml-1 opacity-80 group-hover:opacity-100 transition-opacity">User Dashboard</span>
+                    {/* Left Side: Profile / My Account */}
+                    <div className="flex items-center gap-3 cursor-pointer" onClick={toggleMenu}>
+                        <div className="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-black text-sm border-2 border-emerald-500 overflow-hidden shadow-sm">
+                            {user?.name?.substring(0, 2).toUpperCase() || 'US'}
                         </div>
                     </div>
 
-                    {/* Right Side Hamburger */}
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={toggleMenu}
-                            className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors relative"
-                        >
-                            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                        </button>
+                    {/* Right Side: Logo */}
+                    <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/dashboard')}>
+                        <img src="/logo.png" alt="AUD TO BDT" className="h-8 md:h-10 w-auto object-contain" />
                     </div>
                 </div>
 
@@ -104,28 +98,37 @@ export default function UserLayout() {
             </header>
 
             {/* Bottom Navbar (Mobile & Tablet) */}
-            <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-200 px-8 py-4 flex items-center justify-between z-50 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+            <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-200 px-6 py-4 flex items-center justify-between z-50 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
                 <button
-                    onClick={() => handleNav('/dashboard', 'transactions')}
-                    className="flex flex-col items-center gap-1.5 text-slate-400 font-bold hover:text-emerald-600 transition-colors"
+                    onClick={() => handleNav('/dashboard')}
+                    className={`flex flex-col items-center gap-1.5 transition-colors ${location.pathname === '/dashboard' ? 'text-emerald-600 font-black' : 'text-slate-400 font-bold hover:text-emerald-500'}`}
                 >
-                    <History className="w-6 h-6" />
-                    <span className="text-[10px] uppercase tracking-wider">History</span>
+                    <LayoutDashboard className="w-6 h-6" />
+                    <span className="text-[10px] uppercase tracking-wider">Home</span>
+                </button>
+
+                <button
+                    onClick={() => handleNav('/dashboard', 'profile')}
+                    className="flex flex-col items-center gap-1.5 text-slate-400 font-bold hover:text-emerald-500 transition-colors"
+                >
+                    <User className="w-6 h-6" />
+                    <span className="text-[10px] uppercase tracking-wider">Account</span>
                 </button>
 
                 <button
                     onClick={() => navigate('/send')}
-                    className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full flex items-center justify-center text-white shadow-xl shadow-emerald-500/30 -mt-10 border-[6px] border-slate-50 active:scale-95 transition-transform"
+                    className={`flex flex-col items-center gap-1.5 transition-colors ${location.pathname === '/send' ? 'text-emerald-600 font-black' : 'text-slate-400 font-bold hover:text-emerald-500'}`}
                 >
-                    <Send className="w-6 h-6 ml-0.5" />
+                    <Send className="w-6 h-6" />
+                    <span className="text-[10px] uppercase tracking-wider">Transfer</span>
                 </button>
 
                 <button
-                    onClick={() => handleNav('/dashboard', 'beneficiaries')}
-                    className="flex flex-col items-center gap-1.5 text-slate-400 font-bold hover:text-emerald-600 transition-colors"
+                    onClick={() => navigate('/support')}
+                    className={`flex flex-col items-center gap-1.5 transition-colors ${location.pathname === '/support' ? 'text-emerald-600 font-black' : 'text-slate-400 font-bold hover:text-emerald-500'}`}
                 >
-                    <Users className="w-6 h-6" />
-                    <span className="text-[10px] uppercase tracking-wider">Receivers</span>
+                    <Headset className="w-6 h-6" />
+                    <span className="text-[10px] uppercase tracking-wider">Support</span>
                 </button>
             </nav>
 

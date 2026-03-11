@@ -18,7 +18,7 @@ import { useLocation } from 'react-router-dom';
 
 const GlobalChatbox = () => {
     const location = useLocation();
-    const allowedPaths = ['/', '/dashboard'];
+    const allowedPaths = ['/'];
     if (!allowedPaths.includes(location.pathname)) return null;
     return <Chatbox />;
 };

@@ -22,6 +22,15 @@ export default function UserDashboard() {
     const navigate = useNavigate();
     const location = useLocation();
 
+    const handleNav = (path: string, section?: string) => {
+        if (location.pathname !== path) {
+            navigate(path, { state: { scrollTo: section } });
+        } else if (section) {
+            const el = document.getElementById(section);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
         if (!storedUser) {
@@ -230,6 +239,34 @@ Delivery Method: ${tx.method}
                     </div>
                 </div>
 
+                {/* Mobile 2x2 Action Grid */}
+                <div className="md:hidden grid grid-cols-2 gap-4 mb-10">
+                    <button onClick={() => navigate('/send')} className="bg-white p-4 rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col items-center justify-center gap-3 active:scale-95 transition-transform text-slate-700">
+                        <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                            <Send className="w-6 h-6 ml-0.5" />
+                        </div>
+                        <span className="font-bold text-sm">Send Money</span>
+                    </button>
+                    <button onClick={() => handleNav('/dashboard', 'transactions')} className="bg-white p-4 rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col items-center justify-center gap-3 active:scale-95 transition-transform text-slate-700">
+                        <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                            <History className="w-6 h-6" />
+                        </div>
+                        <span className="font-bold text-sm">My Transactions</span>
+                    </button>
+                    <button onClick={() => alert('Cards feature coming soon!')} className="bg-white p-4 rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col items-center justify-center gap-3 active:scale-95 transition-transform text-slate-700">
+                        <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                            <Wallet className="w-6 h-6" />
+                        </div>
+                        <span className="font-bold text-sm">My Cards</span>
+                    </button>
+                    <button onClick={() => handleNav('/dashboard', 'beneficiaries')} className="bg-white p-4 rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col items-center justify-center gap-3 active:scale-95 transition-transform text-slate-700">
+                        <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+                            <Users className="w-6 h-6" />
+                        </div>
+                        <span className="font-bold text-sm">Beneficiary List</span>
+                    </button>
+                </div>
+
                 <div className="grid lg:grid-cols-3 gap-10">
 
                     {/* Left Column: Flow & Action */}
@@ -302,90 +339,72 @@ Delivery Method: ${tx.method}
                                 </div>
                             ) : (
                                 <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
-                                    {/* Table Header (Hidden on small mobile) */}
-                                    <div className="hidden md:grid grid-cols-12 gap-4 p-5 border-b border-slate-100 bg-slate-50/50 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                                        <div className="col-span-4 pl-2">Receiver & Date</div>
-                                        <div className="col-span-3">Method</div>
-                                        <div className="col-span-3">Amount</div>
-                                        <div className="col-span-2 text-right pr-2">Status</div>
-                                    </div>
-
-                                    <div className="divide-y divide-slate-100">
-                                        {displayedTransfers.map((tx) => (
-                                            <div 
-                                                key={tx.id} 
-                                                onClick={() => setSelectedTx(tx)} 
-                                                className="p-5 md:p-4 grid grid-cols-1 md:grid-cols-12 gap-4 md:items-center hover:bg-slate-50 transition-all cursor-pointer group"
-                                            >
-                                                {/* Mobile top row: Receiver & Status */}
-                                                <div className="flex justify-between items-start md:hidden mb-2">
-                                                    <div className="font-bold text-slate-900 text-lg">{tx.accountName}</div>
-                                                    <div className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border flex items-center gap-1 ${
-                                                            tx.status === 'sent' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
-                                                            tx.status === 'paid' ? 'bg-blue-50 text-blue-600 border-blue-100' : 
-                                                            'bg-amber-50 text-amber-600 border-amber-100'
-                                                        }`}>
-                                                            {tx.status === 'sent' && <Check className="w-3 h-3" />}
-                                                            {tx.status === 'paid' && <Zap className="w-3 h-3" />}
-                                                            {tx.status === 'pending' && <Clock className="w-3 h-3" />}
-                                                            {tx.status}
-                                                    </div>
-                                                </div>
-
-                                                {/* Desktop Column 1: Receiver & Date */}
-                                                <div className="md:col-span-4 flex items-center gap-3">
-                                                    <div className={`hidden md:flex w-10 h-10 rounded-xl items-center justify-center shrink-0 shadow-sm ${
-                                                        tx.status === 'sent' ? 'bg-emerald-500 text-white' : 
-                                                        tx.status === 'paid' ? 'bg-blue-500 text-white' : 
-                                                        'bg-slate-100 text-slate-500'
-                                                    }`}>
-                                                        {tx.status === 'sent' ? <CheckCircle2 className="w-5 h-5" /> : tx.status === 'paid' ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-bold text-slate-900 hidden md:block">{tx.accountName}</div>
-                                                        <div className="text-xs font-bold text-slate-500 mt-0.5">{new Date(tx.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Column 2: Method */}
-                                                <div className="md:col-span-3 flex items-center gap-2">
-                                                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 md:hidden">
-                                                        {tx.method === 'mobile_wallet' ? <Smartphone className="w-4 h-4" /> : <Building2 className="w-4 h-4" />}
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-sm font-bold text-slate-700 capitalize">{tx.method.replace('_', ' ')}</div>
-                                                        <div className="text-xs text-slate-400 font-medium md:hidden">{tx.accountNumber.slice(-4)}</div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Column 3: Amount */}
-                                                <div className="md:col-span-3 flex flex-row md:flex-col justify-between md:justify-center items-center md:items-start bg-slate-50 md:bg-transparent p-3 md:p-0 rounded-xl mt-2 md:mt-0">
-                                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest md:hidden">Sent / Delivered</span>
-                                                    <div className="text-right md:text-left">
-                                                        <div className="text-sm md:text-base font-black text-slate-900">${tx.amountAud} <span className="text-xs text-slate-400 font-bold">AUD</span></div>
-                                                        <div className="text-xs font-bold text-emerald-600 mt-0.5">৳ {Number(tx.amountBdt).toLocaleString()} <span className="text-slate-400 font-medium opacity-70">BDT</span></div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Column 4: Status / Actions (Desktop) */}
-                                                <div className="hidden md:flex md:col-span-2 justify-end items-center gap-3 pr-2">
-                                                    <div className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border flex items-center gap-1 ${
-                                                        tx.status === 'sent' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
-                                                        tx.status === 'paid' ? 'bg-blue-50 text-blue-600 border-blue-100' : 
-                                                        'bg-amber-50 text-amber-600 border-amber-100'
-                                                    }`}>
-                                                        {tx.status}
-                                                    </div>
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); downloadReceipt(tx); }}
-                                                        className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 flex items-center justify-center hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all opacity-0 group-hover:opacity-100 shrink-0 shadow-sm"
-                                                        title="Download Receipt"
-                                                    >
-                                                        <Download className="w-3.5 h-3.5" />
-                                                    </button>
-                                                </div>
+                                    <div className="overflow-x-auto w-full scrollbar-hide">
+                                        <div className="min-w-[700px]">
+                                            {/* Table Header */}
+                                            <div className="grid grid-cols-12 gap-4 p-5 border-b border-slate-100 bg-slate-50/50 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                                <div className="col-span-4 pl-2">Receiver & Date</div>
+                                                <div className="col-span-3">Method</div>
+                                                <div className="col-span-3">Amount</div>
+                                                <div className="col-span-2 text-right pr-2">Status</div>
                                             </div>
-                                        ))}
+
+                                            <div className="divide-y divide-slate-100">
+                                                {displayedTransfers.map((tx) => (
+                                                    <div 
+                                                        key={tx.id} 
+                                                        onClick={() => setSelectedTx(tx)} 
+                                                        className="p-5 grid grid-cols-12 gap-4 items-center hover:bg-slate-50 transition-all cursor-pointer group"
+                                                    >
+                                                        {/* Column 1: Receiver & Date */}
+                                                        <div className="col-span-4 flex items-center gap-3">
+                                                            <div className={`flex w-10 h-10 rounded-xl items-center justify-center shrink-0 shadow-sm ${
+                                                                tx.status === 'sent' ? 'bg-emerald-500 text-white' : 
+                                                                tx.status === 'paid' ? 'bg-blue-500 text-white' : 
+                                                                'bg-slate-100 text-slate-500'
+                                                            }`}>
+                                                                {tx.status === 'sent' ? <CheckCircle2 className="w-5 h-5" /> : tx.status === 'paid' ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                                                            </div>
+                                                            <div>
+                                                                <div className="font-bold text-slate-900">{tx.accountName}</div>
+                                                                <div className="text-xs font-bold text-slate-500 mt-0.5">{new Date(tx.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Column 2: Method */}
+                                                        <div className="col-span-3 flex items-center gap-2">
+                                                            <div>
+                                                                <div className="text-sm font-bold text-slate-700 capitalize">{tx.method.replace('_', ' ')}</div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Column 3: Amount */}
+                                                        <div className="col-span-3 flex flex-col justify-center items-start rounded-xl">
+                                                            <div className="text-base font-black text-slate-900">${tx.amountAud} <span className="text-xs text-slate-400 font-bold">AUD</span></div>
+                                                            <div className="text-xs font-bold text-emerald-600 mt-0.5">৳ {Number(tx.amountBdt).toLocaleString()} <span className="text-slate-400 font-medium opacity-70">BDT</span></div>
+                                                        </div>
+
+                                                        {/* Column 4: Status / Actions */}
+                                                        <div className="flex col-span-2 justify-end items-center gap-3 pr-2">
+                                                            <div className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border flex items-center gap-1 ${
+                                                                tx.status === 'sent' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
+                                                                tx.status === 'paid' ? 'bg-blue-50 text-blue-600 border-blue-100' : 
+                                                                'bg-amber-50 text-amber-600 border-amber-100'
+                                                            }`}>
+                                                                {tx.status}
+                                                            </div>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); downloadReceipt(tx); }}
+                                                                className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 flex items-center justify-center hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all opacity-0 group-hover:opacity-100 shrink-0 shadow-sm"
+                                                                title="Download Receipt"
+                                                            >
+                                                                <Download className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {filteredTransfers.length > 5 && !viewAll && (
