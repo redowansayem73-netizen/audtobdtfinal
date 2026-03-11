@@ -47,7 +47,7 @@ export default function UserLayout() {
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     {/* Logo Area (65%) */}
                     <div className="flex-[0.65] flex flex-col justify-start cursor-pointer group" onClick={() => navigate('/dashboard')}>
-                        <img src="/logo.png" alt="AUD TO BDT" className="h-10 w-auto" />
+                        <img src="/logo.png" alt="AUD TO BDT" className="h-10 md:h-12 w-auto object-contain" />
                         <div className="mt-1">
                             <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest block ml-1 opacity-80 group-hover:opacity-100 transition-opacity">User Dashboard</span>
                         </div>
@@ -104,47 +104,47 @@ export default function UserLayout() {
             </header>
 
             {/* Bottom Navbar (Mobile & Tablet) */}
-            <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 px-6 py-3 flex items-center justify-between z-50 safe-area-bottom">
+            <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-200 px-8 py-4 flex items-center justify-between z-50 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
                 <button
                     onClick={() => handleNav('/dashboard', 'transactions')}
-                    className="flex flex-col items-center gap-1 text-slate-400 font-bold"
+                    className="flex flex-col items-center gap-1.5 text-slate-400 font-bold hover:text-emerald-600 transition-colors"
                 >
                     <History className="w-6 h-6" />
-                    <span className="text-[10px] uppercase tracking-tighter">History</span>
+                    <span className="text-[10px] uppercase tracking-wider">History</span>
                 </button>
 
                 <button
                     onClick={() => navigate('/send')}
-                    className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-200 -mt-10 border-4 border-white active:scale-95 transition-transform"
+                    className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full flex items-center justify-center text-white shadow-xl shadow-emerald-500/30 -mt-10 border-[6px] border-slate-50 active:scale-95 transition-transform"
                 >
-                    <Send className="w-7 h-7" />
+                    <Send className="w-6 h-6 ml-0.5" />
                 </button>
 
                 <button
                     onClick={() => handleNav('/dashboard', 'beneficiaries')}
-                    className="flex flex-col items-center gap-1 text-slate-400 font-bold"
+                    className="flex flex-col items-center gap-1.5 text-slate-400 font-bold hover:text-emerald-600 transition-colors"
                 >
                     <Users className="w-6 h-6" />
-                    <span className="text-[10px] uppercase tracking-tighter">Receivers</span>
+                    <span className="text-[10px] uppercase tracking-wider">Receivers</span>
                 </button>
             </nav>
 
             {/* Desktop Side Navbar (Simple variant) */}
-            <div className="hidden md:flex fixed left-0 top-0 h-full w-20 bg-slate-900 flex-col items-center py-10 gap-8 z-50">
-                <div className="cursor-pointer" onClick={() => navigate('/dashboard')}>
-                    <Globe className="w-8 h-8 text-emerald-500" />
+            <div className="hidden md:flex fixed left-0 top-0 h-full w-24 bg-slate-950 border-r border-slate-900 flex-col items-center py-12 gap-8 z-50 shadow-2xl">
+                <div className="cursor-pointer mb-4" onClick={() => navigate('/dashboard')}>
+                    <Globe className="w-10 h-10 text-emerald-500 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]" />
                 </div>
-                <button onClick={() => handleNav('/dashboard', 'transactions')} className="w-12 h-12 rounded-2xl hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all transition-colors" title="Transactions">
-                    <History className="w-6 h-6" />
+                <button onClick={() => handleNav('/dashboard', 'transactions')} className="w-14 h-14 rounded-2xl hover:bg-slate-900 flex items-center justify-center text-slate-400 hover:text-white transition-all group" title="Transactions">
+                    <History className="w-6 h-6 group-hover:scale-110 transition-transform" />
                 </button>
-                <button onClick={() => navigate('/send')} className="w-12 h-12 rounded-2xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 active:scale-95 transition-transform" title="Send Money">
-                    <Send className="w-6 h-6" />
+                <button onClick={() => navigate('/send')} className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 active:scale-95 transition-all group hover:shadow-emerald-500/40" title="Send Money">
+                    <Send className="w-6 h-6 ml-0.5 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
                 </button>
-                <button onClick={() => handleNav('/dashboard', 'beneficiaries')} className="w-12 h-12 rounded-2xl hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all transition-colors" title="Beneficiaries">
-                    <Users className="w-6 h-6" />
+                <button onClick={() => handleNav('/dashboard', 'beneficiaries')} className="w-14 h-14 rounded-2xl hover:bg-slate-900 flex items-center justify-center text-slate-400 hover:text-white transition-all group" title="Beneficiaries">
+                    <Users className="w-6 h-6 group-hover:scale-110 transition-transform" />
                 </button>
-                <button onClick={() => handleNav('/dashboard', 'profile')} className="mt-auto w-12 h-12 rounded-2xl hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all transition-colors" title="Settings">
-                    <Settings className="w-6 h-6" />
+                <button onClick={() => handleNav('/dashboard', 'profile')} className="mt-auto w-14 h-14 rounded-2xl hover:bg-slate-900 flex items-center justify-center text-slate-400 hover:text-white transition-all group" title="Settings">
+                    <Settings className="w-6 h-6 group-hover:rotate-45 transition-transform duration-300" />
                 </button>
             </div>
 

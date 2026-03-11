@@ -33,7 +33,7 @@ export default function Login() {
     }
   };
 
-  const handleVerifyCode = async (e?: React.FormEvent) => {
+  const handleVerifyCode = async (e?: React.FormEvent, overrideCode?: string) => {
     if (e) e.preventDefault();
     setIsLoading(true);
     setError('');
@@ -41,7 +41,7 @@ export default function Login() {
       const res = await fetch('/api/auth/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code }),
+        body: JSON.stringify({ email, code: overrideCode || code }),
       });
       const data = await res.json();
       if (data.success) {
@@ -119,7 +119,7 @@ export default function Login() {
                     setCode(val);
                     if (val.length === 6) {
                       // Trigger verification automatically when 6 digits are entered
-                      setTimeout(() => handleVerifyCode(), 0);
+                      handleVerifyCode(undefined, val);
                     }
                   }}
                   className="block w-full px-4 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:bg-white focus:border-emerald-500 focus:ring-0 transition-all font-medium text-center text-3xl tracking-[0.5em] shadow-inner"

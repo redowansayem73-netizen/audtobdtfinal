@@ -117,6 +117,21 @@ export default function SuperAdminDashboard() {
         <div className="pb-20">
 
             <main className="max-w-7xl mx-auto px-4 pt-10">
+                {/* Tab Switcher */}
+                <div className="flex gap-4 mb-8">
+                    <button
+                        onClick={() => setActiveTab('admins')}
+                        className={`px-6 py-3 rounded-2xl font-bold transition-all ${activeTab === 'admins' ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-100'}`}
+                    >
+                        Admin Team
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('settings')}
+                        className={`px-6 py-3 rounded-2xl font-bold transition-all ${activeTab === 'settings' ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-100'}`}
+                    >
+                        Global Settings
+                    </button>
+                </div>
                 {activeTab === 'admins' && (
                     <div className="space-y-10">
                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">

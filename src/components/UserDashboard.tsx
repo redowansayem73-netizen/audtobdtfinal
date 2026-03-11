@@ -176,47 +176,54 @@ Delivery Method: ${tx.method}
             <main className="max-w-7xl mx-auto px-4 pt-10">
                 <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
-                        <h1 className="text-4xl font-black text-slate-900">Welcome back, {user?.name?.split(' ')[0] || 'User'}!</h1>
-                        <p className="text-slate-500 mt-2 font-medium">Here's what's happening with your international transfers.</p>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 rounded-full text-emerald-700 text-xs font-bold mb-3 border border-emerald-100">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            {new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 18 ? 'Good Afternoon' : 'Good Evening'}
+                        </div>
+                        <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">Welcome back, {user?.name?.split(' ')[0] || 'User'}!</h1>
+                        <p className="text-slate-500 mt-3 font-medium text-lg">Here's your international transfer overview.</p>
                     </div>
                 </header>
 
                 {/* Personal Analytics Row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                    <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-3xl p-6 shadow-xl shadow-emerald-200/50 relative overflow-hidden group text-white">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110 blur-sm"></div>
                         <div className="relative z-10">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                                    <DollarSign className="w-5 h-5" />
+                                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                    <DollarSign className="w-5 h-5 text-white" />
                                 </div>
-                                <span className="font-bold text-slate-500">Total Sent (Lifetime)</span>
+                                <span className="font-bold text-emerald-50 uppercase tracking-widest text-xs">Total Sent (Lifetime)</span>
                             </div>
-                            <div className="text-4xl font-black text-slate-900">${stats.totalAud.toLocaleString()}</div>
+                            <div className="text-4xl font-black">${stats.totalAud.toLocaleString()} <span className="text-lg font-bold text-emerald-200">AUD</span></div>
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-3xl p-6 shadow-xl shadow-blue-200/50 relative overflow-hidden group text-white">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110 blur-sm"></div>
+                        <div className="relative z-10">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                    <Wallet className="w-5 h-5 text-white" />
+                                </div>
+                                <span className="font-bold text-blue-50 uppercase tracking-widest text-xs">Delivered in BDT</span>
+                            </div>
+                            <div className="text-4xl font-black">৳ {stats.totalBdt.toLocaleString()}</div>
                         </div>
                     </div>
 
                     <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
                         <div className="relative z-10">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
-                                    <Wallet className="w-5 h-5" />
-                                </div>
-                                <span className="font-bold text-slate-500">Delivered in BDT</span>
-                            </div>
-                            <div className="text-4xl font-black text-slate-900">৳ {stats.totalBdt.toLocaleString()}</div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                                <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center">
                                     <History className="w-5 h-5" />
                                 </div>
-                                <span className="font-bold text-slate-500">Total Transfers</span>
+                                <span className="font-bold text-slate-500 uppercase tracking-widest text-xs">Total Transfers</span>
                             </div>
                             <div className="text-4xl font-black text-slate-900">{totalTransfers}</div>
                         </div>
@@ -270,7 +277,7 @@ Delivery Method: ${tx.method}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                                 <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
                                     <div className="w-2 h-8 bg-emerald-500 rounded-full"></div>
-                                    Recent Activity
+                                    Transaction History
                                 </h2>
                                 <div className="flex gap-2 p-1.5 bg-slate-100 rounded-xl shrink-0 self-start">
                                     {['all', 'pending', 'completed'].map(f => (
@@ -286,7 +293,7 @@ Delivery Method: ${tx.method}
                             </div>
 
                             {filteredTransfers.length === 0 ? (
-                                <div className="bg-white rounded-3xl border border-dashed border-slate-300 p-12 text-center">
+                                <div className="bg-white rounded-3xl border border-dashed border-slate-300 p-12 text-center shadow-sm">
                                     <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
                                         <Send className="w-8 h-8" />
                                     </div>
@@ -294,46 +301,102 @@ Delivery Method: ${tx.method}
                                     <p className="text-slate-500 mt-2">You don't have any transfers matching this filter.</p>
                                 </div>
                             ) : (
-                                <div className="space-y-4">
-                                    {displayedTransfers.map((tx) => (
-                                        <div key={tx.id} onClick={() => setSelectedTx(tx)} className="bg-white rounded-3xl border border-slate-100 p-5 flex items-center justify-between gap-4 shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
-                                            <div className="flex items-center gap-4">
-                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${tx.status === 'sent' ? 'bg-emerald-50 text-emerald-600' :
-                                                    tx.status === 'paid' ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'
-                                                    }`}>
-                                                    {tx.status === 'sent' ? <CheckCircle2 className="w-6 h-6" /> : tx.status === 'paid' ? <CheckCircle2 className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
-                                                </div>
-                                                <div>
-                                                    <div className="font-bold text-slate-900">{tx.accountName}</div>
-                                                    <div className="text-xs font-bold text-slate-400 mt-0.5">
-                                                        {new Date(tx.createdAt).toLocaleDateString()} • {tx.method.replace('_', ' ')}
+                                <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
+                                    {/* Table Header (Hidden on small mobile) */}
+                                    <div className="hidden md:grid grid-cols-12 gap-4 p-5 border-b border-slate-100 bg-slate-50/50 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                        <div className="col-span-4 pl-2">Receiver & Date</div>
+                                        <div className="col-span-3">Method</div>
+                                        <div className="col-span-3">Amount</div>
+                                        <div className="col-span-2 text-right pr-2">Status</div>
+                                    </div>
+
+                                    <div className="divide-y divide-slate-100">
+                                        {displayedTransfers.map((tx) => (
+                                            <div 
+                                                key={tx.id} 
+                                                onClick={() => setSelectedTx(tx)} 
+                                                className="p-5 md:p-4 grid grid-cols-1 md:grid-cols-12 gap-4 md:items-center hover:bg-slate-50 transition-all cursor-pointer group"
+                                            >
+                                                {/* Mobile top row: Receiver & Status */}
+                                                <div className="flex justify-between items-start md:hidden mb-2">
+                                                    <div className="font-bold text-slate-900 text-lg">{tx.accountName}</div>
+                                                    <div className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border flex items-center gap-1 ${
+                                                            tx.status === 'sent' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
+                                                            tx.status === 'paid' ? 'bg-blue-50 text-blue-600 border-blue-100' : 
+                                                            'bg-amber-50 text-amber-600 border-amber-100'
+                                                        }`}>
+                                                            {tx.status === 'sent' && <Check className="w-3 h-3" />}
+                                                            {tx.status === 'paid' && <Zap className="w-3 h-3" />}
+                                                            {tx.status === 'pending' && <Clock className="w-3 h-3" />}
+                                                            {tx.status}
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div className="flex items-center gap-6">
-                                                <div className="text-right">
-                                                    <div className="text-lg font-black text-slate-900">${tx.amountAud}</div>
-                                                    <div className={`text-[10px] font-black uppercase tracking-widest mt-1 ${tx.status === 'sent' ? 'text-emerald-600' : tx.status === 'paid' ? 'text-blue-500' : 'text-amber-500'}`}>
+
+                                                {/* Desktop Column 1: Receiver & Date */}
+                                                <div className="md:col-span-4 flex items-center gap-3">
+                                                    <div className={`hidden md:flex w-10 h-10 rounded-xl items-center justify-center shrink-0 shadow-sm ${
+                                                        tx.status === 'sent' ? 'bg-emerald-500 text-white' : 
+                                                        tx.status === 'paid' ? 'bg-blue-500 text-white' : 
+                                                        'bg-slate-100 text-slate-500'
+                                                    }`}>
+                                                        {tx.status === 'sent' ? <CheckCircle2 className="w-5 h-5" /> : tx.status === 'paid' ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-bold text-slate-900 hidden md:block">{tx.accountName}</div>
+                                                        <div className="text-xs font-bold text-slate-500 mt-0.5">{new Date(tx.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Column 2: Method */}
+                                                <div className="md:col-span-3 flex items-center gap-2">
+                                                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 md:hidden">
+                                                        {tx.method === 'mobile_wallet' ? <Smartphone className="w-4 h-4" /> : <Building2 className="w-4 h-4" />}
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-sm font-bold text-slate-700 capitalize">{tx.method.replace('_', ' ')}</div>
+                                                        <div className="text-xs text-slate-400 font-medium md:hidden">{tx.accountNumber.slice(-4)}</div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Column 3: Amount */}
+                                                <div className="md:col-span-3 flex flex-row md:flex-col justify-between md:justify-center items-center md:items-start bg-slate-50 md:bg-transparent p-3 md:p-0 rounded-xl mt-2 md:mt-0">
+                                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest md:hidden">Sent / Delivered</span>
+                                                    <div className="text-right md:text-left">
+                                                        <div className="text-sm md:text-base font-black text-slate-900">${tx.amountAud} <span className="text-xs text-slate-400 font-bold">AUD</span></div>
+                                                        <div className="text-xs font-bold text-emerald-600 mt-0.5">৳ {Number(tx.amountBdt).toLocaleString()} <span className="text-slate-400 font-medium opacity-70">BDT</span></div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Column 4: Status / Actions (Desktop) */}
+                                                <div className="hidden md:flex md:col-span-2 justify-end items-center gap-3 pr-2">
+                                                    <div className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border flex items-center gap-1 ${
+                                                        tx.status === 'sent' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
+                                                        tx.status === 'paid' ? 'bg-blue-50 text-blue-600 border-blue-100' : 
+                                                        'bg-amber-50 text-amber-600 border-amber-100'
+                                                    }`}>
                                                         {tx.status}
                                                     </div>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); downloadReceipt(tx); }}
+                                                        className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 flex items-center justify-center hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all opacity-0 group-hover:opacity-100 shrink-0 shadow-sm"
+                                                        title="Download Receipt"
+                                                    >
+                                                        <Download className="w-3.5 h-3.5" />
+                                                    </button>
                                                 </div>
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); downloadReceipt(tx); }}
-                                                    className="w-10 h-10 rounded-full bg-slate-50 border border-slate-200 text-slate-400 flex items-center justify-center hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all opacity-0 group-hover:opacity-100 shrink-0"
-                                                    title="Download Receipt"
-                                                >
-                                                    <Download className="w-4 h-4" />
-                                                </button>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
+
                                     {filteredTransfers.length > 5 && !viewAll && (
-                                        <button
-                                            onClick={() => setViewAll(true)}
-                                            className="w-full py-4 text-emerald-600 font-bold hover:bg-emerald-50 rounded-2xl transition-colors"
-                                        >
-                                            View All History
-                                        </button>
+                                        <div className="p-4 bg-slate-50 border-t border-slate-100 text-center">
+                                            <button
+                                                onClick={() => setViewAll(true)}
+                                                className="inline-flex items-center gap-2 px-6 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 rounded-xl transition-all shadow-sm text-sm"
+                                            >
+                                                View All Transactions <ArrowRight className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             )}
@@ -349,24 +412,30 @@ Delivery Method: ${tx.method}
                             </h2>
                         </div>
 
-                        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 p-2">
+                        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 p-3 pt-4">
                             {beneficiaries.length === 0 ? (
                                 <div className="p-8 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200 m-2">
                                     <p className="text-slate-500 font-medium text-sm">No saved receivers found. They will be saved automatically when you send money.</p>
                                 </div>
                             ) : (
-                                <div className="space-y-1">
+                                <div className="grid grid-cols-2 gap-2">
                                     {beneficiaries.map(ben => (
-                                        <div key={ben.id} className="p-4 rounded-2xl hover:bg-slate-50 transition-colors flex items-center gap-4 group cursor-pointer" onClick={() => navigate('/send', { state: { amountAud: sendAmount || 1000, beneficiary: ben } })}>
-                                            <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center shrink-0 text-slate-500 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors">
-                                                {ben.type === 'mobile_wallet' ? <Smartphone className="w-5 h-5" /> : <Building2 className="w-5 h-5" />}
+                                        <div 
+                                          key={ben.id} 
+                                          className="p-4 rounded-2xl hover:bg-emerald-50 border border-transparent hover:border-emerald-100 transition-colors flex flex-col justify-between h-32 group cursor-pointer bg-slate-50" 
+                                          onClick={() => navigate('/send', { state: { amountAud: sendAmount || 1000, beneficiary: ben } })}
+                                        >
+                                            <div className="flex justify-between items-start">
+                                                <div className="w-10 h-10 bg-white shadow-sm rounded-full flex items-center justify-center shrink-0 text-slate-500 group-hover:text-emerald-600 transition-colors">
+                                                    {ben.type === 'mobile_wallet' ? <Smartphone className="w-5 h-5" /> : <Building2 className="w-5 h-5" />}
+                                                </div>
+                                                <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity -mt-1 -mr-1">
+                                                    <ArrowRight className="w-3.5 h-3.5 text-emerald-600" />
+                                                </div>
                                             </div>
                                             <div>
-                                                <div className="font-bold text-slate-900 text-sm">{ben.name}</div>
-                                                <div className="text-xs font-bold text-slate-400 mt-0.5">{ben.provider || ben.bankName} • {ben.accountNumber.slice(-4)}</div>
-                                            </div>
-                                            <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <ArrowRight className="w-4 h-4 text-emerald-500" />
+                                                <div className="font-bold text-slate-900 text-sm truncate">{ben.name}</div>
+                                                <div className="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-wider truncate">{ben.provider || ben.bankName} • {ben.accountNumber.slice(-4)}</div>
                                             </div>
                                         </div>
                                     ))}

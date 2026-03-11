@@ -13,6 +13,15 @@ import AdminLogin from './components/AdminLogin';
 import AdminLayout from './components/AdminLayout';
 import UserLayout from './components/UserLayout';
 import Chatbox from './components/Chatbox';
+import FAQSupportPage from './components/FAQSupportPage';
+import { useLocation } from 'react-router-dom';
+
+const GlobalChatbox = () => {
+    const location = useLocation();
+    const allowedPaths = ['/', '/dashboard'];
+    if (!allowedPaths.includes(location.pathname)) return null;
+    return <Chatbox />;
+};
 
 function App() {
     return (
@@ -22,6 +31,7 @@ function App() {
                     <Route path="/" element={<LandingPage />} />
                     {/* Standalone Routes */}
                     <Route path="/" element={<LandingPage />} />
+                    <Route path="/support" element={<FAQSupportPage />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/admin-login" element={<AdminLogin />} />
                     <Route path="/admin/login" element={<AdminLogin />} />
@@ -41,7 +51,7 @@ function App() {
                         <Route path="/super-admin" element={<SuperAdminDashboard />} />
                     </Route>
                 </Routes>
-                <Chatbox />
+                <GlobalChatbox />
             </div>
         </Router>
     );

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { Loader2, ArrowRight, ArrowLeft, CheckCircle2, Building2, Smartphone, ShieldCheck, Mail, User, Clock, Info, Zap, Shield, AlertCircle, Lock, Check } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft, CheckCircle2, Building2, Smartphone, ShieldCheck, Mail, User, Clock, Info, Zap, Shield, AlertCircle, Lock, Check, Menu, X } from 'lucide-react';
 
 const stripePromise = loadStripe((import.meta as any).env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_sample');
 
 export default function SendMoneyFlow() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const initialAmount = location.state?.amountAud || 1000;
   const initialBeneficiary = location.state?.beneficiary;
@@ -108,7 +109,35 @@ export default function SendMoneyFlow() {
   };
 
   return (
-    <div className="min-h-screen pt-6 pb-12 px-2 bg-slate-50 flex flex-col justify-center">
+    <div className="min-h-screen pt-28 pb-12 px-2 bg-slate-50 flex flex-col justify-center relative">
+      {/* Header / Navigation */}
+      <nav className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between h-20 items-center">
+                  <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
+                      <img src="/logo.png" alt="AUD TO BDT" className="h-12 md:h-14 w-auto transition-transform hover:scale-105" />
+                  </div>
+
+                  <div className="hidden md:flex items-center gap-8">
+                      <Link to="/login" className="text-slate-600 hover:text-emerald-600 font-bold transition-colors">Login</Link>
+                  </div>
+
+                  <div className="md:hidden">
+                      <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 text-slate-600">
+                          {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+                      </button>
+                  </div>
+              </div>
+          </div>
+
+          {/* Mobile Menu */}
+          {isMenuOpen && (
+              <div className="md:hidden bg-white border-t border-slate-100 p-6 space-y-4 animate-in slide-in-from-top-4 duration-300">
+                  <Link to="/login" className="block py-3 text-slate-900 font-bold text-lg">Login</Link>
+              </div>
+          )}
+      </nav>
+
       <div className="max-w-sm mx-auto w-full">
         <button
           onClick={() => step > 1 ? setStep(step - 1) : navigate('/')}
