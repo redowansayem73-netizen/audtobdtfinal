@@ -269,19 +269,21 @@ export default function SendMoneyFlow() {
 
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { id: 'mobile_wallet', label: 'Mobile Wallet', sub: 'Instant', icon: Smartphone, speed: 'Fast' },
-                  { id: 'bank', label: 'Bank Account', sub: '1-2 Biz Days', icon: Building2, speed: 'Standard' }
+                  { id: 'mobile_wallet', label: 'Mobile Wallet', sub: 'INSTANT', icon: Smartphone, speed: 'Fast' },
+                  { id: 'bank', label: 'Bank Account', sub: '1-2 BIZ DAYS', icon: Building2, speed: 'Standard' }
                 ].map((m) => (
                   <button
                     key={m.id}
                     onClick={() => setDeliveryMethod(m.id as any)}
-                    className={`p-4 sm:p-5 rounded-[1.5rem] border-2 text-left transition-all relative overflow-hidden group ${deliveryMethod === m.id ? 'border-emerald-500 bg-emerald-50/40 shadow-xl shadow-emerald-50' : 'border-slate-100 bg-slate-50 hover:border-slate-300'}`}
+                    className={`p-3 sm:p-4 rounded-[1.25rem] border-2 text-left transition-all relative overflow-hidden flex items-center gap-3 group ${deliveryMethod === m.id ? 'border-emerald-500 bg-emerald-50/40 shadow-sm' : 'border-slate-100 bg-slate-50 hover:border-slate-300'}`}
                   >
-                    <m.icon className={`w-6 h-6 mb-3 transition-colors ${deliveryMethod === m.id ? 'text-emerald-600' : 'text-slate-300'}`} />
-                    <div className="font-black text-slate-900 text-sm">{m.label}</div>
-                    <div className="text-[9px] text-slate-400 font-black mt-0.5 uppercase tracking-widest">{m.sub}</div>
+                    <m.icon className={`w-6 h-6 shrink-0 transition-colors ${deliveryMethod === m.id ? 'text-emerald-600' : 'text-slate-400'}`} />
+                    <div>
+                        <div className="font-black text-slate-900 text-xs sm:text-sm leading-none mb-1">{m.label}</div>
+                        <div className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{m.sub}</div>
+                    </div>
                     {deliveryMethod === m.id && (
-                      <div className="absolute top-3 right-3 bg-emerald-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-widest">ON</div>
+                      <div className="absolute top-2 right-2 bg-emerald-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-widest">ON</div>
                     )}
                   </button>
                 ))}
