@@ -10,6 +10,17 @@ export default function LandingPage() {
     const navigate = useNavigate();
 
     useEffect(() => {
+        // Check for active session
+        const storedUser = localStorage.getItem('user');
+        const loginTimestamp = localStorage.getItem('loginTimestamp');
+        
+        if (storedUser && loginTimestamp) {
+            const daysSinceLogin = (Date.now() - parseInt(loginTimestamp)) / (1000 * 60 * 60 * 24);
+            if (daysSinceLogin < 15) {
+                navigate('/dashboard', { replace: true });
+            }
+        }
+
         fetch('/api/config/rate')
             .then(res => res.json())
             .then(data => {
@@ -19,7 +30,7 @@ export default function LandingPage() {
                 }
             })
             .catch(err => console.error('Failed to fetch rate:', err));
-    }, []);
+    }, [navigate]);
 
     const handleAudChange = (val: number) => {
         setAmountAud(val);
