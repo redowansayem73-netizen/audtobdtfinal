@@ -208,7 +208,7 @@ export default function LandingPage() {
                         <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">Why Thousands Trust Us</h2>
                         <div className="w-20 h-2 bg-emerald-500 mx-auto rounded-full"></div>
                         <p className="text-xl text-slate-600 font-medium pt-4">
-                            We understand that sending money home is more than just a transaction — it’s support, care, and responsibility.
+                            We understand that sending money home is more than just a transaction. As a trusted money transfer service, we employ bank-level encryption and advanced security infrastructure to protect your data from unauthorized access, alteration, or disclosure.
                         </p>
                     </div>
 

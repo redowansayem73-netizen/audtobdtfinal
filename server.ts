@@ -12,6 +12,8 @@ import { createServer as createViteServer } from 'vite';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 // --- HOSTINGER DEBUG LOGGING WIDGET ---
 const debugStream = fs.createWriteStream('hostinger-debug.txt', { flags: 'a' });
@@ -35,6 +37,23 @@ process.on('unhandledRejection', (reason) => {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+
+// 1. Set Security HTTP Headers (Bank Level Security)
+app.use(helmet({
+  contentSecurityPolicy: false, // Disabled to prevent blocking Stripe and Vite HMR
+  crossOriginEmbedderPolicy: false,
+}));
+
+// 2. Global Rate Limiting
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 mins
+  max: 1000, // Limit each IP to 1000 requests per window
+  message: { error: 'Too many requests from this IP, please try again after 15 minutes' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api', globalLimiter); // Apply rate limiter to all API routes
+
 app.use(cors());
 app.use(express.json());
 
