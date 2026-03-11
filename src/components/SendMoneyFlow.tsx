@@ -59,8 +59,6 @@ export default function SendMoneyFlow() {
         .then(res => res.json())
         .then(setSavedBeneficiaries)
         .catch(console.error);
-    } else {
-      navigate('/login', { state: { returnTo: '/send', amountAud: initialAmount } });
     }
   }, [navigate, initialAmount]);
 
