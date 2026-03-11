@@ -99,6 +99,14 @@ export default function UserDashboard() {
         }
     }, [location]);
 
+    useEffect(() => {
+        if (location.state?.openLatestTracker && transfers.length > 0) {
+            const mostRecent = [...transfers].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+            setSelectedTx(mostRecent);
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state, transfers]);
+
     const fetchDashboardData = async (email: string) => {
         try {
             const [txRes, benRes, rateRes, userRes] = await Promise.all([
@@ -245,9 +253,9 @@ export default function UserDashboard() {
     const filteredTransfers = transfers.filter(tx => {
         if (filter === 'all') return true;
         if (filter === 'completed') return tx.status === 'paid' || tx.status === 'sent';
-        if (filter === 'pending') return tx.status === 'pending';
+        if (filter === 'pending') return tx.status === 'pending' || tx.status === 'processing';
         return true;
-    });
+    }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     const displayedTransfers = viewAll ? filteredTransfers : filteredTransfers.slice(0, 5);
 
@@ -449,8 +457,8 @@ Delivery Method: ${tx.method}
                                 </div>
                             ) : (
                                 <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
-                                    <div className="overflow-x-auto w-full scrollbar-hide">
-                                        <div className="min-w-[700px]">
+                                    <div className="w-full">
+                                        <div>
                                             {/* Table Header */}
                                             <div className="grid grid-cols-12 gap-4 p-5 border-b border-slate-100 bg-slate-50/50 text-xs font-bold text-slate-400 uppercase tracking-widest">
                                                 <div className="col-span-4 pl-2">Receiver & Date</div>
@@ -623,8 +631,8 @@ Delivery Method: ${tx.method}
                             </div>
                         ) : (
                             <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
-                                <div className="overflow-x-auto w-full scrollbar-hide">
-                                    <div className="min-w-[700px]">
+                                <div className="w-full">
+                                    <div>
                                         {/* Table Header */}
                                         <div className="grid grid-cols-12 gap-4 p-5 border-b border-slate-100 bg-slate-50/50 text-xs font-bold text-slate-400 uppercase tracking-widest">
                                             <div className="col-span-4 pl-2">Receiver & Date</div>

@@ -573,7 +573,7 @@ export default function SendMoneyFlow() {
 
               <div className="flex flex-col gap-3 pt-2">
                 <button
-                  onClick={() => navigate('/dashboard')}
+                  onClick={() => navigate('/dashboard', { state: { openLatestTracker: true } })}
                   className="w-full bg-[#1a1f2e] text-white py-4 rounded-[1.5rem] text-sm font-black hover:bg-slate-800 transition-all"
                 >
                   Track in My Dashboard
